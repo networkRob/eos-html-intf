@@ -1,7 +1,7 @@
 import socket, json
 from pprint import pprint as pp
 
-HOST='localhost'
+HOST='192.168.50.32'
 PORT= 50019
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
