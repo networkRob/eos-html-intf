@@ -41,10 +41,12 @@ __author__ = 'rmartin'
 __version__ = 0.1
 
 from jsonrpclib import Server
-import SocketServer, json
+import SocketServer, json, hashlib, base64
 
-HOST = 'localhost'
+WS_MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+HOST = ''
 PORT = 50019
+all_cons = []
 
 class lSwitch:
     def __init__(self):
@@ -70,9 +72,27 @@ class lSwitch:
 
 class ServerEOS(SocketServer.BaseRequestHandler):
     def handle(self):
+        all_cons.append(self.client_address)
+        print(all_cons)
+        self.data = self.request.recv(1024).strip()
+        headers = self.data.split("\r\n")
+        # is it a websocket request?
+        if "Connection: Upgrade" in self.data and "Upgrade: websocket" in self.data:
+            # getting the websocket key out
+            for h in headers:
+                if "Sec-WebSocket-Key" in h:
+                    key = h.split(" ")[1]
+            # let's shake hands shall we?
+            self.shake_hand(key)
+            while True:
+                payload = self.decode_frame(bytearray(self.request.recv(1024).strip()))
+                decoded_payload = payload.decode('utf-8')
+                self.send_frame(payload)
+        """
         while True:
-            self.data = self.request.recv(1024).strip()
+            self.data = self.request.recv(2048).strip()
             if not self.data:
+                all_cons.pop(all_cons.index(self.client_address))
                 break
             print("{0} requested: {1}".format(self.client_address[0], self.data))
             if self.data == 'status':
@@ -80,9 +100,34 @@ class ServerEOS(SocketServer.BaseRequestHandler):
             elif self.data == 'mode':
                 self.request.sendall(json.dumps(lo_sw.all_intfs_mode))
             else:
-                self.request.sendall('Try again:')            
+                self.request.sendall('Try again:')   """
+    def shake_hand(self,key):
+        # calculating response as per protocol RFC
+        key = key + WS_MAGIC_STRING
+        resp_key = base64.standard_b64encode(hashlib.sha1(key).digest())
+        resp="HTTP/1.1 101 Switching Protocols\r\n" + \
+             "Upgrade: websocket\r\n" + \
+             "Connection: Upgrade\r\n" + \
+             "Sec-WebSocket-Accept: %s\r\n\r\n"%(resp_key)
+    def decode_frame(self,frame):
+        opcode_and_fin = frame[0]
+        # assuming it's masked, hence removing the mask bit(MSB) to get len. also assuming len is <125
+        payload_len = frame[1] - 128
+        mask = frame [2:6]
+        encrypted_payload = frame [6: 6+payload_len]
+        payload = bytearray([ encrypted_payload[i] ^ mask[i%4] for i in range(payload_len)])
+        return payload
+    def send_frame(self, payload):
+        # setting fin to 1 and opcpde to 0x1
+        frame = [129]
+        # adding len. no masking hence not doing +128
+        frame += [len(payload)]
+        # adding payload
+        frame_to_send = bytearray(frame) + payload
+        self.request.sendall(frame_to_send)       
 
 lo_sw = lSwitch()
+SocketServer.TCPServer.allow_reuse_address = True
 
 server = SocketServer.TCPServer((HOST, PORT), ServerEOS)
 server.serve_forever()
