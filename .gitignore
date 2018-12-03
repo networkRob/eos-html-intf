@@ -1,4 +1,3 @@
-scripts/t-*
 conf/
 rpmbuild/
 source/scripts/t-*
