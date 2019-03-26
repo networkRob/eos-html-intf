@@ -1,0 +1,43 @@
+<html>
+<head>
+   <link href="/bootstrap-combined.min.css" rel="stylesheet">
+   <link rel="stylesheet" type="text/css" href="/style.css">
+   <link rel="stylesheet" type="text/css" href="/documentationStyles.css">
+   <script src="/jquery.min.js"></script>
+   <script src="/bootstrap.min.js"></script>
+   <script src="js/js.js"></script>
+   <title>Command API Applications</title>
+</head>
+<body>
+   <div id="navbar" class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+         <div class="container">
+            <a class="pull-left logo" href=".">
+              <img src="/img/CommandApiLogo.png" alt="Arista Command API"></img>
+            </a>
+            <ul class="nav">
+              <li><a class="" href="/explorer.html">Explorer</a></li>
+              <li class="divider"></li>
+              <li><a class="" href="/overview.html">Overview</a></li>
+              <li class="divider"></li>
+              <li><a class="" href="/documentation.html">Command Documentation</a></li>
+              <li class="divider"></li>
+              <li class="active"><a class="" href="/apps/index.html">Apps</a></li>
+            </ul>
+         </div>
+      </div>
+   </div>
+   <div id="content" class="container">
+     <div class="content-wrapper">
+       <h1>EOS Interface Viewer</h1>
+       <form id="EOS_CMD">
+          <label for="eCmd">EOS Info to grab:</label>
+          <input id="eCmd" name="cmd">
+          <input type="submit" value="Submit">
+       </form>
+       <p>Data output below:</p>
+       <div id="EosOutput">Temp Holder</div>
+     </div> <!-- end content-wrapper -->
+   </div> <!-- end content -->
+</body>
+</html>

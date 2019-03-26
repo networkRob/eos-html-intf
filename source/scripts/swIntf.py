@@ -54,7 +54,9 @@ all_cons = []
 class lSwitch:
     def __init__(self):
         self.l_sw = Server("unix:/var/run/command-api.sock")
-        self.getData()
+        self.version = self.runC("show version")
+        self.extensions = self.runC("show extensions")
+        #self.getData()
     def getData(self):
         self.all_intfs = self.runC('show interfaces status')[0]['interfaceStatuses']
         self.all_intfs_status = self.intf_status()
@@ -83,8 +85,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             tmp_mes = json.dumps(lo_sw.all_intfs_status)
         elif message == 'mode':
             tmp_mes = json.dumps(lo_sw.all_intfs_mode)
+        elif message == 'extensions':
+            tmp_mes = json.dumps(lo_sw.extensions)
         else:
-            tmp_mes = 'Try again'
+            tmp_mes = json.dumps(lo_sw.version)
         self.write_message(tmp_mes)
  
     def on_close(self):
@@ -99,6 +103,7 @@ if __name__ == "__main__":
     lo_sw = lSwitch()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(50019)
-    myIP = socket.gethostbyname(socket.gethostname())
-    print '*** Websocket Server Started at %s***' % myIP
+    #myIP = socket.gethostbyname(socket.gethostname())
+    #print '*** Websocket Server Started at %s***' % myIP
+    print '*** Websocket Server Started ***'
     tornado.ioloop.IOLoop.instance().start()
