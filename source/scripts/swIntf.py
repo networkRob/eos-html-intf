@@ -47,6 +47,7 @@ import tornado.websocket
 import tornado.ioloop
 import tornado.web
 from time import sleep
+from datetime import timedelta, datetime
 
 HOST = ''
 PORT = 50019
@@ -57,10 +58,13 @@ class lSwitch:
         self.l_sw = Server("unix:/var/run/command-api.sock")
         self.getData()
     def getData(self):
-        self.all_intfs = self.runC('show interfaces status')[0]['interfaceStatuses']
-        self.all_intfs_status = self.intf_status()
-        self.all_intfs_mode = self.intf_mode()
-        self.version = self.runC("show version")
+        swData = self.runC("show interfaces status","show hostname","show version")
+        self.all_intfs = swData[0]['interfaceStatuses']
+        self.data = {
+            'version': swData[2]['version'],
+            'model': swData[2]['modelName'],
+            'hostname': swData[1]['fqdn']
+        }
         self.extensions = self.runC("show extensions")[0]['extensions']
     def runC(self,*cmds):
         res = self.l_sw.runCmds(1,cmds)
@@ -86,44 +90,30 @@ class lSwitch:
 class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         print 'new connection'
-      
-    def on_message(self, message):
-        print 'message received:  %s' % message
-        tmp_mes = ""
-        if message == 'status':
-            tmp_mes = json.dumps(['status',lo_sw.all_intfs_status])
-        elif message == 'interfaces':
-            tmp_mes = json.dumps(['intfs',lo_sw.all_intfs])
-        elif message == 'mode':
-            tmp_mes = json.dumps(['mode',lo_sw.all_intfs_mode])
-        elif message == 'extensions':
-            tmp_mes = json.dumps(['extensions',lo_sw.extensions])
-        elif message == 'version':
-            tmp_mes = json.dumps(['version',lo_sw.version])
-        elif message == 'all':
-            self.all_cms()
-        else:
-            tmp_mes = json.dumps("INIT")
-        if tmp_mes:
-            self.write_message(tmp_mes)
+        lo_sw.getData()
+        self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
+        self.schedule_update()
+    
+    def on_message(self,message):
+        print("Received {}".format(message))
+
+    def schedule_update(self):
+        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=2),self.update_client)
+    
+    def update_client(self):
+        try:
+            lo_sw.getData()
+            self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
+        finally:
+            self.schedule_update()
  
     def on_close(self):
         print 'connection closed'
+        tornado.ioloop.IOLoop.instance().remove_timeout(self.timeout)
  
     def check_origin(self, origin):
         return True
     
-    def all_cms(self):
-        self.write_message(json.dumps(['intfs',lo_sw.all_intfs]))
-        time.sleep(tdelay)
-        self.write_message(json.dumps(['status',lo_sw.all_intfs_status]))
-        time.sleep(tdelay)
-        self.write_message(json.dumps(['mode',lo_sw.all_intfs_mode]))
-        time.sleep(tdelay)
-        self.write_message(json.dumps(['extensions',lo_sw.extensions]))
-        time.sleep(tdelay)
-        self.write_message(json.dumps(['version',lo_sw.version]))
-
 application = tornado.web.Application([(r'/eos', WSHandler),])
 
 if __name__ == "__main__":
