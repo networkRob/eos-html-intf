@@ -1,0 +1,117 @@
+.rTable {
+    display: block;
+    width: 100%; 
+} 
+.rTableRow {   	
+    clear: both; 
+} 
+.rTableCell {   	
+    border: 1px solid rgb(0,0,0);
+    float: left;
+    text-align: center;
+    height: 25px;
+    width: 25px;
+    overflow: hidden;
+    padding: 3px;
+} 
+.rIntfBreak {
+    float: left;
+    height: 25px;
+    width: 25px;
+    padding: 3px;
+}
+.rIntfUP {
+    border: 1px solid rgb(0,128,0);
+    background-color: rgba(0,128,0,0.75);;
+    float: left;
+    position: relative;
+    text-align: center;
+    height: 25px;
+    width: 25px;
+    padding: 3px;
+}
+.rIntfDOWN {
+    border: 1px solid rgb(255,0,0);
+    background-color: rgba(255,0,0,0.75);
+    float: left;
+    position: relative;
+    text-align: center;
+    height: 25px;
+    width: 25px;
+    padding: 3px;
+}
+.rIntfDISABLED {
+    border: 1px solid rgb(202, 202, 202);
+    background-color: rgba(202, 202, 202,0.75);
+    float: left;
+    position: relative;
+    text-align: center;
+    height: 25px;
+    width: 25px;
+    padding: 3px;
+}
+.rQIntfUP {
+    border: 1px solid rgb(0,128,0);
+    background-color: rgba(0,128,0,0.75);;
+    float: left;
+    position: relative;
+    text-align: center;
+    height: 25px;
+    width: 50px;
+    padding: 3px;
+}
+.rQIntfDOWN {
+    border: 1px solid rgb(255,0,0);
+    background-color: rgba(255,0,0,0.75);
+    float: left;
+    position: relative;
+    text-align: center;
+    height: 25px;
+    width: 50px;
+    padding: 3px;
+}
+.rQIntfDISABLED {
+    border: 1px solid rgb(202, 202, 202);
+    background-color: rgba(202, 202, 202,0.75);
+    float: left;
+    position: relative;
+    text-align: center;
+    height: 25px;
+    width: 50px;
+    padding: 3px;
+}
+
+/* IntfInfo Pop-Out */
+.rIntfUP .IntfPopTextTOP, .rIntfDOWN .IntfPopTextTOP, .rIntfDISABLED .IntfPopTextTOP, .rQIntfUP .IntfPopTextTOP, .rQIntfDOWN .IntfPopTextTOP, .rQIntfDISABLED .IntfPopTextTOP {
+    visibility: hidden;
+    width: 200px;
+    background-color: rgb(228, 213, 171);
+    color: #000;
+    text-align: left;
+    font-size: 12px;
+    padding: 5px 0 5px 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -100px;
+}
+.rIntfUP .IntfPopTextBOTTOM, .rIntfDOWN .IntfPopTextBOTTOM, .rIntfDISABLED .IntfPopTextBOTTOM, .rQIntfUP .IntfPopTextBOTTOM, .rQIntfDOWN .IntfPopTextBOTTOM, .rQIntfDISABLED .IntfPopTextBOTTOM {
+    visibility: hidden;
+    width: 200px;
+    background-color: rgb(228, 213, 171);
+    color: #000;
+    text-align: left;
+    font-size: 12px;
+    padding: 5px 0 5px 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 50%;
+    margin-left: -100px;
+}
+.rIntfUP:hover .IntfPopTextTOP, .rIntfDOWN:hover .IntfPopTextTOP, .rIntfDISABLED:hover .IntfPopTextTOP, .rIntfUP:hover .IntfPopTextBOTTOM, .rIntfDOWN:hover .IntfPopTextBOTTOM, .rIntfDISABLED:hover .IntfPopTextBOTTOM, .rQIntfUP:hover .IntfPopTextTOP, .rQIntfDOWN:hover .IntfPopTextTOP, .rQIntfDISABLED:hover .IntfPopTextTOP, .QrIntfUP:hover .IntfPopTextBOTTOM, .rQIntfDOWN:hover .IntfPopTextBOTTOM, .rQIntfDISABLED:hover .IntfPopTextBOTTOM {
+    visibility: visible;
+}

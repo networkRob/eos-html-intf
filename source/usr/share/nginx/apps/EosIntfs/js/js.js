@@ -24,6 +24,8 @@ ws.onmessage = function (evt)
         // Evaluate if Interface Data
         if (received_msg[0] == "intfs") {
             c_intfs = gIntfID(received_msg[0],res_keys);
+            output += disIntfs(received_msg[0],r_msg,c_intfs);
+            /*
             for (i in c_intfs[0]) {
                 output += "<b>" + c_intfs[1][c_intfs[0][i]] + ":</b><br />";
                 var tmp_keys = Object.keys(r_msg[c_intfs[1][c_intfs[0][i]]]);
@@ -40,10 +42,13 @@ ws.onmessage = function (evt)
                         output += tmp_keys[x] + ": " + r_msg[c_intfs[1][c_intfs[0][i]]][tmp_keys[x]] + "<br />";
                     }
                 }
-            }
+            }*/
         }
-        else if (received_msg[0] == "mode" ||
-        received_msg[0] == "status") {
+        else if (received_msg[0] == "status") {
+            c_intfs = gIntfID(received_msg[0],res_keys);
+            output += dis48Intfs(received_msg[0],r_msg,c_intfs);
+        }
+        else if (received_msg[0] == "mode") {
             c_intfs = gIntfID(received_msg[0],res_keys);
             for (i in c_intfs[0]) {
                 output += c_intfs[1][c_intfs[0][i]] + ": " + r_msg[c_intfs[1][c_intfs[0][i]]]+ "<br />";
@@ -141,4 +146,95 @@ function gIntfID(rType,iList) {
     }
     cList.sort();
     return [cList,cDict];
+}
+
+function checkStatus(iStatus) {
+    if (iStatus == "connected") {
+        return "UP";
+    }
+    else if (iStatus == "notconnect") {
+        return "DOWN";
+    }
+    else if (iStatus == "disabled") {
+        return "DISABLED";
+    }
+}
+
+function disIntfs(rType,rData,rIntfs) {
+    var t_output = "<div class='rTable'><div class='rTableRow'>";
+    var row_top = "", row_bottom="";
+    var i;
+    for (i = 0; i <= 49; i++) {
+        if (rIntfs[1][rIntfs[0][i]].indexOf("Ethernet") > -1) {
+            iInfo = rData[rIntfs[1][rIntfs[0][i]]];
+            t_class = checkStatus(iInfo["linkStatus"]);
+            if (t_class) {
+                if (i >= 48) {
+                    intType = "rQ";
+                }
+                else {
+                    intType = "r";
+                }
+                if (i % 2 == 0) {
+                    row_top += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
+                    row_top += "Desc: " + iInfo['description'] + "<br />";
+                    row_top += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
+                }
+                else {
+                    row_bottom += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
+                    row_bottom += "Desc: " + iInfo['description'] + "<br />";
+                    row_bottom += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
+                }
+            }
+        }
+    }
+    t_output += row_top + "</div><div class='rTableRow'>" + row_bottom;
+    t_output += "</div></div>";
+    return t_output;
+}
+
+function dis48Intfs(rType,rData,rIntfs) {
+    var t_output = "<div class='rTable'><div class='rTableRow'>";
+    var i;
+    for (i = 0; i <= 46; i += 2) {
+        t_class = checkStatus(rData[rIntfs[1][rIntfs[0][i]]]);
+        if (t_class) {
+            t_output += "<div class='rIntf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP'>" + rIntfs[1][rIntfs[0][i]] + "</span></div>";
+        }
+    }
+    t_output += "<div class='rIntfBreak'></div>";
+    for (i = 48; i <= 54; i += 2) {
+        var t_class;
+        if (rIntfs[1][rIntfs[0][i]].indexOf("Ethernet") > -1) {
+            t_class = checkStatus(rData[rIntfs[1][rIntfs[0][i]]]);
+        }        
+        else {
+            t_class = "";
+        }
+        if (t_class) {
+            t_output += "<div class='rQIntf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP'>" + rIntfs[1][rIntfs[0][i]] + "</span></div>";
+        }
+    }
+    t_output += "</div><div class='rTableRow'>";
+    for (i = 1; i <= 47; i += 2) {
+        t_class = checkStatus(rData[rIntfs[1][rIntfs[0][i]]]);
+        if (t_class) {
+            t_output += "<div class='rIntf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM'>" + rIntfs[1][rIntfs[0][i]] + "</span></div>";
+        }
+    }
+    t_output += "<div class='rIntfBreak'></div>";
+    for (i = 49; i <= 54; i += 2) {
+        var t_class;
+        if (rIntfs[1][rIntfs[0][i]].indexOf("Ethernet") > -1) {
+            t_class = checkStatus(rData[rIntfs[1][rIntfs[0][i]]]);
+        }        
+        else {
+            t_class = "";
+        }
+        if (t_class) {
+            t_output += "<div class='rQIntf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM'>" + rIntfs[1][rIntfs[0][i]] + "</span></div>";
+        }
+    }
+    t_output += "</div></div>";
+    return t_output;
 }
