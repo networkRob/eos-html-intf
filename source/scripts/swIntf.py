@@ -58,52 +58,42 @@ class lSwitch:
         self.l_sw = Server("unix:/var/run/command-api.sock")
         self.getData()
     def getData(self):
-        swData = self.runC("show interfaces status","show hostname","show version")
-        self.all_intfs = swData[0]['interfaceStatuses']
+        swData = self.runC(
+            "show interfaces status",
+            "show hostname",
+            "show version",
+            "show interfaces"
+        )
         self.data = {
-            'version': swData[2]['version'],
-            'model': swData[2]['modelName'],
-            'hostname': swData[1]['fqdn']
+            'intfStatus': swData[0]['interfaceStatuses'],
+            'hostname': swData[1]['fqdn'],
+            'system': swData[2],
+            'intfData': swData[3]
+            
         }
-        self.extensions = self.runC("show extensions")[0]['extensions']
     def runC(self,*cmds):
         res = self.l_sw.runCmds(1,cmds)
         return(res)
-    def intf_status(self):
-        list_intfs = []
-        dict_intfs = {}
-        for intf in self.all_intfs:
-            list_intfs.append({intf:self.all_intfs[intf]['linkStatus']})
-            dict_intfs[intf] = self.all_intfs[intf]['linkStatus']
-        return(dict_intfs)
-    def intf_mode(self):
-        list_intfs = []
-        dict_intfs = {}
-        for intf in self.all_intfs:
-            if 'interfaceMode' in self.all_intfs[intf]['vlanInformation'].keys():
-                list_intfs.append({intf:self.all_intfs[intf]['vlanInformation']['interfaceMode']})
-                dict_intfs[intf] = self.all_intfs[intf]['vlanInformation']['interfaceMode']
-            elif 'interfaceForwardingModel' in self.all_intfs[intf]['vlanInformation'].keys():
-                dict_intfs[intf] = self.all_intfs[intf]['vlanInformation']['interfaceForwardingModel']
-        return(dict_intfs)
 
 class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         print 'new connection'
         lo_sw.getData()
-        self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
+        #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
+        self.write_message(json.dumps([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
         self.schedule_update()
     
     def on_message(self,message):
         print("Received {}".format(message))
 
     def schedule_update(self):
-        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=2),self.update_client)
+        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=10),self.update_client)
     
     def update_client(self):
         try:
             lo_sw.getData()
-            self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
+            #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
+            self.write_message(json.dumps([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
         finally:
             self.schedule_update()
  

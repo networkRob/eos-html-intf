@@ -1,6 +1,16 @@
+.swImg {
+    position: relative;
+    width: 100%;
+}
+.swImg img {
+    float: left;
+}
 .rTable {
     display: block;
+    position: absolute;
     width: 100%; 
+    z-index: 10;
+    color: #fff;
 } 
 .rTableRow {   	
     clear: both; 
@@ -16,39 +26,41 @@
 } 
 .rIntfBreak {
     float: left;
-    height: 25px;
-    width: 25px;
+    height: 15px;
+    width: 3px;
     padding: 3px;
 }
 .rIntfUP {
-    border: 1px solid rgb(0,128,0);
+    border: 0.5px solid rgb(0,128,0);
     background-color: rgba(0,128,0,0.75);;
     float: left;
     position: relative;
     text-align: center;
-    height: 25px;
-    width: 25px;
+    height: 15px;
+    width: 28px;
     padding: 3px;
+    margin-bottom: 16px;
 }
 .rIntfDOWN {
-    border: 1px solid rgb(255,0,0);
+    border: 0.5px solid rgb(255,0,0);
     background-color: rgba(255,0,0,0.75);
     float: left;
     position: relative;
     text-align: center;
-    height: 25px;
-    width: 25px;
+    height: 15px;
+    width: 28px;
     padding: 3px;
+    margin-bottom: 16px;
 }
 .rIntfDISABLED {
-    border: 1px solid rgb(202, 202, 202);
-    background-color: rgba(202, 202, 202,0.75);
+    border: 0.5px solid rgba(202, 202, 202,0.1);
     float: left;
     position: relative;
     text-align: center;
-    height: 25px;
-    width: 25px;
+    height: 15px;
+    width: 28px;
     padding: 3px;
+    margin-bottom: 16px;
 }
 .rQIntfUP {
     border: 1px solid rgb(0,128,0);
@@ -56,8 +68,8 @@
     float: left;
     position: relative;
     text-align: center;
-    height: 25px;
-    width: 50px;
+    height: 15px;
+    width: 43px;
     padding: 3px;
 }
 .rQIntfDOWN {
@@ -66,18 +78,17 @@
     float: left;
     position: relative;
     text-align: center;
-    height: 25px;
-    width: 50px;
+    height: 15px;
+    width: 43px;
     padding: 3px;
 }
 .rQIntfDISABLED {
-    border: 1px solid rgb(202, 202, 202);
-    background-color: rgba(202, 202, 202,0.75);
+    border: 1px solid rgba(202, 202, 202,0.1);
     float: left;
     position: relative;
     text-align: center;
-    height: 25px;
-    width: 50px;
+    height: 15px;
+    width: 40px;
     padding: 3px;
 }
 
@@ -85,7 +96,7 @@
 .rIntfUP .IntfPopTextTOP, .rIntfDOWN .IntfPopTextTOP, .rIntfDISABLED .IntfPopTextTOP, .rQIntfUP .IntfPopTextTOP, .rQIntfDOWN .IntfPopTextTOP, .rQIntfDISABLED .IntfPopTextTOP {
     visibility: hidden;
     width: 200px;
-    background-color: rgb(228, 213, 171);
+    background-color: rgba(228, 213, 171,0.75);
     color: #000;
     text-align: left;
     font-size: 12px;
@@ -100,7 +111,7 @@
 .rIntfUP .IntfPopTextBOTTOM, .rIntfDOWN .IntfPopTextBOTTOM, .rIntfDISABLED .IntfPopTextBOTTOM, .rQIntfUP .IntfPopTextBOTTOM, .rQIntfDOWN .IntfPopTextBOTTOM, .rQIntfDISABLED .IntfPopTextBOTTOM {
     visibility: hidden;
     width: 200px;
-    background-color: rgb(228, 213, 171);
+    background-color: rgba(228, 213, 171,0.85);
     color: #000;
     text-align: left;
     font-size: 12px;

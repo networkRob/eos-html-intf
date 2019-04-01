@@ -13,19 +13,22 @@ ws.onmessage = function (evt)
     var re_data = evt.data;
     var c_intfs;
     var received_msg = JSON.parse(re_data);
-    var res_keys = Object.keys(received_msg[1]);
+    var res_keys = Object.keys(received_msg[1]['intfStatus']);
 
-    output += "<h3>" + received_msg[0]['hostname'] + "</h3>";
-    output += "<b>Last Update:</b> " + received_msg[2] + "<br />";
-    output += "<b>Model:</b> " + received_msg[0]['model'];
+    output += "<h3>" + received_msg[1]['hostname'] + "</h3>";
+    output += "<b>Last Update:</b> " + received_msg[0] + "<br />";
+    output += "<b>Model:</b> " + received_msg[1]['system']['modelName'] + "<br />";
+    output += "<b>Serial Number:</b> " + received_msg[1]['system']['serialNumber'] + "<br />";
+    output += "<b>EOS Version:</b> " + received_msg[1]['system']['version'] + "<br />";
+
     output += "<br /><br />";
-    r_msg = received_msg[1];
-    c_intfs = gIntfID(received_msg[0],res_keys);
-    output += disIntfs(received_msg[0],r_msg,c_intfs);
+    r_msg = received_msg[1]["intfStatus"];
+    c_intfs = gIntfID(res_keys);
+    output += disIntfs(r_msg,c_intfs);
     document.getElementById('EosOutput').innerHTML = output;
     
 };
-
+/*
 window.addEventListener("load", function() {
 
     document.getElementById("EOS_CMD").addEventListener("submit", function (event) {
@@ -33,7 +36,7 @@ window.addEventListener("load", function() {
         ws.send(document.getElementById('eCmd').value);
     });
 });
-
+*/
 function conInt(prInt) {
     var nInt;
     var cDict = {};
@@ -68,23 +71,14 @@ function conInt(prInt) {
     return [nInt,prInt];
 }
 
-function gIntfID(rType,iList) {
+function gIntfID(iList) {
     var cList = [];
     var cDict = {};
     var i;
-    if (rType != "intfs") {
-        for (i in iList) {
-            tmpInt = conInt(iList[i]);
-            cDict[tmpInt[0]] = tmpInt[1];
-            cList.push(tmpInt[0]);
-        }
-    }
-    else {
-        for (i in iList) {
-            tmpInt = conInt(iList[i]);
-            cDict[tmpInt[0]] = tmpInt[1];
-            cList.push(tmpInt[0]);
-        }
+    for (i in iList) {
+        tmpInt = conInt(iList[i]);
+        cDict[tmpInt[0]] = tmpInt[1];
+        cList.push(tmpInt[0]);
     }
     cList.sort();
     return [cList,cDict];
@@ -102,8 +96,24 @@ function checkStatus(iStatus) {
     }
 }
 
-function disIntfs(rType,rData,rIntfs) {
-    var t_output = "<div class='rTable'><div class='rTableRow'>";
+function getIntfType(intInfo) {
+    var intfFor = intInfo["vlanInformation"]["interfaceForwardingModel"];
+    if (intfFor == "dataLink") {
+        return intInfo["vlanInformation"]["vlanExplanation"];
+    }
+    else if (intfFor == "bridged" && intInfo["vlanInformation"]["interfaceMode"] == "bridged") {
+        return "Access<br />VLAN: " + intInfo["vlanInformation"]["vlanId"];
+    }
+    else if (intfFor == "routed") {
+        return "Routed";
+    }
+    else {
+        return "Trunk";
+    }
+}
+
+function disIntfs(rData,rIntfs) {
+    var t_output = "<div class='swImg'><img src='imgs/7280se-68.png'><div class='rTable' style='top:25px;left:16px;'><div class='rTableRow'>";
     var row_top = "", row_bottom="";
     var i;
     for (i = 0; i <= 49; i++) {
@@ -117,20 +127,30 @@ function disIntfs(rType,rData,rIntfs) {
                 else {
                     intType = "r";
                 }
-                if (i % 2 == 0) {
+                if (i % 2 == 0 && i < 47) {
+                    if (i == 16 || i == 32) {
+                        row_top += "<div class='rIntfBreak'></div>";
+                    }
                     row_top += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
                     row_top += "Desc: " + iInfo['description'] + "<br />";
+                    row_top += "Status: " + iInfo["linkStatus"] + "<br />";
+                    row_top += "Mode: " + getIntfType(iInfo) + "<br />";
                     row_top += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
                 else {
+                    if (i == 17 || i == 33 || i == 48) {
+                        row_bottom += "<div class='rIntfBreak'></div>";
+                    }
                     row_bottom += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
                     row_bottom += "Desc: " + iInfo['description'] + "<br />";
+                    row_bottom += "Status: " + iInfo["linkStatus"] + "<br />";
+                    row_bottom += "Mode: " + getIntfType(iInfo) + "<br />";
                     row_bottom += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
             }
         }
     }
     t_output += row_top + "</div><div class='rTableRow'>" + row_bottom;
-    t_output += "</div></div>";
+    t_output += "</div></div></div>";
     return t_output;
 }
