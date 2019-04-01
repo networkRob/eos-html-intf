@@ -27,69 +27,56 @@
 .rIntfBreak {
     float: left;
     height: 15px;
-    width: 3px;
-    padding: 3px;
+    width: 8px;
 }
 .rIntfUP {
-    border: 0.5px solid rgb(0,128,0);
     background-color: rgba(0,128,0,0.75);;
     float: left;
     position: relative;
     text-align: center;
-    height: 15px;
-    width: 28px;
-    padding: 3px;
+    height: 23px;
+    width: 35px;
     margin-bottom: 16px;
 }
 .rIntfDOWN {
-    border: 0.5px solid rgb(255,0,0);
     background-color: rgba(255,0,0,0.75);
     float: left;
     position: relative;
     text-align: center;
-    height: 15px;
-    width: 28px;
-    padding: 3px;
+    height: 23px;
+    width: 35px;
     margin-bottom: 16px;
 }
 .rIntfDISABLED {
-    border: 0.5px solid rgba(202, 202, 202,0.1);
     float: left;
     position: relative;
     text-align: center;
-    height: 15px;
-    width: 28px;
-    padding: 3px;
+    height: 23px;
+    width: 35px;
     margin-bottom: 16px;
 }
 .rQIntfUP {
-    border: 1px solid rgb(0,128,0);
     background-color: rgba(0,128,0,0.75);;
     float: left;
     position: relative;
     text-align: center;
-    height: 15px;
-    width: 43px;
-    padding: 3px;
+    height: 23px;
+    width: 47px;
 }
 .rQIntfDOWN {
-    border: 1px solid rgb(255,0,0);
     background-color: rgba(255,0,0,0.75);
     float: left;
     position: relative;
     text-align: center;
-    height: 15px;
-    width: 43px;
-    padding: 3px;
+    height: 23px;
+    width: 47px;
 }
 .rQIntfDISABLED {
-    border: 1px solid rgba(202, 202, 202,0.1);
     float: left;
     position: relative;
     text-align: center;
-    height: 15px;
-    width: 40px;
-    padding: 3px;
+    height: 23px;
+    width: 47px;
 }
 
 /* IntfInfo Pop-Out */

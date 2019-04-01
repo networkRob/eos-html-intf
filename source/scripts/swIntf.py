@@ -58,22 +58,27 @@ class lSwitch:
         self.l_sw = Server("unix:/var/run/command-api.sock")
         self.getData()
     def getData(self):
-        swData = self.runC(
+        self.swData = self.runC(
             "show interfaces status",
             "show hostname",
             "show version",
             "show interfaces"
         )
         self.data = {
-            'intfStatus': swData[0]['interfaceStatuses'],
-            'hostname': swData[1]['fqdn'],
-            'system': swData[2],
-            'intfData': swData[3]
+            'intfStatus': self.swData[0]['interfaceStatuses'],
+            'hostname': self.swData[1]['fqdn'],
+            'system': self.swData[2],
+            'intfData': self.swData[3],
+            'swImage': self.getSwImg()
             
         }
     def runC(self,*cmds):
         res = self.l_sw.runCmds(1,cmds)
         return(res)
+    def getSwImg(self):
+        mn = self.swData[2]['modelName'].lower().split('-')
+        swName = mn[:len(mn)-1]
+        return("-".join(swName)+".png")
 
 class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):

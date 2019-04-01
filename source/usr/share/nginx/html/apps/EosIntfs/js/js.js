@@ -1,4 +1,4 @@
-var ws = new WebSocket("wss://rtr-02.rob.lab/eos")
+var ws = new WebSocket("wss://{IP}/eos")
 ws.onopen = function()
 {
     // Web Socket is connected, send data using send()
@@ -24,7 +24,7 @@ ws.onmessage = function (evt)
     output += "<br /><br />";
     r_msg = received_msg[1]["intfStatus"];
     c_intfs = gIntfID(res_keys);
-    output += disIntfs(r_msg,c_intfs);
+    output += disIntfs(r_msg,c_intfs,received_msg[1]['swImage']);
     document.getElementById('EosOutput').innerHTML = output;
     
 };
@@ -112,8 +112,8 @@ function getIntfType(intInfo) {
     }
 }
 
-function disIntfs(rData,rIntfs) {
-    var t_output = "<div class='swImg'><img src='imgs/7280se-68.png'><div class='rTable' style='top:25px;left:16px;'><div class='rTableRow'>";
+function disIntfs(rData,rIntfs,swImg) {
+    var t_output = "<div class='swImg'><img src='imgs/" + swImg + "'><div class='rTable' style='top:25px;left:17px;'><div class='rTableRow'>";
     var row_top = "", row_bottom="";
     var i;
     for (i = 0; i <= 49; i++) {
