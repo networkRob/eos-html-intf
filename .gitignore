@@ -1,3 +1,4 @@
 conf/
 rpmbuild/
 source/scripts/test
+.DS_Store

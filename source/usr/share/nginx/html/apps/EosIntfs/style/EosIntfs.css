@@ -83,7 +83,7 @@
 .rIntfUP .IntfPopTextTOP, .rIntfDOWN .IntfPopTextTOP, .rIntfDISABLED .IntfPopTextTOP, .rQIntfUP .IntfPopTextTOP, .rQIntfDOWN .IntfPopTextTOP, .rQIntfDISABLED .IntfPopTextTOP {
     visibility: hidden;
     width: 200px;
-    background-color: rgba(228, 213, 171,0.75);
+    background-color: #eff5fb;
     color: #000;
     text-align: left;
     font-size: 12px;
@@ -98,7 +98,7 @@
 .rIntfUP .IntfPopTextBOTTOM, .rIntfDOWN .IntfPopTextBOTTOM, .rIntfDISABLED .IntfPopTextBOTTOM, .rQIntfUP .IntfPopTextBOTTOM, .rQIntfDOWN .IntfPopTextBOTTOM, .rQIntfDISABLED .IntfPopTextBOTTOM {
     visibility: hidden;
     width: 200px;
-    background-color: rgba(228, 213, 171,0.85);
+    background-color: #eff5fb;
     color: #000;
     text-align: left;
     font-size: 12px;

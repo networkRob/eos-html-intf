@@ -81,24 +81,25 @@ class lSwitch:
         return("-".join(swName)+".png")
 
 class WSHandler(tornado.websocket.WebSocketHandler):
+
     def open(self):
         print 'new connection'
         lo_sw.getData()
         #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
-        self.write_message(json.dumps([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
+        self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
         self.schedule_update()
     
     def on_message(self,message):
         print("Received {}".format(message))
 
     def schedule_update(self):
-        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=10),self.update_client)
+        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=5),self.update_client)
     
     def update_client(self):
         try:
             lo_sw.getData()
             #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
-            self.write_message(json.dumps([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
+            self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
         finally:
             self.schedule_update()
  

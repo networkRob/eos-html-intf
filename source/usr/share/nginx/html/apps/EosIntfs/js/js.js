@@ -1,4 +1,8 @@
-var ws = new WebSocket("wss://{IP}/eos")
+var eosURL = window.location.href;
+eosURL = eosURL.replace("https:","wss:")
+eosURL = eosURL.replace("apps/EosIntfs/","eos")
+
+var ws = new WebSocket(eosURL);
 ws.onopen = function()
 {
     // Web Socket is connected, send data using send()
@@ -13,20 +17,29 @@ ws.onmessage = function (evt)
     var re_data = evt.data;
     var c_intfs;
     var received_msg = JSON.parse(re_data);
-    var res_keys = Object.keys(received_msg[1]['intfStatus']);
-
-    output += "<h3>" + received_msg[1]['hostname'] + "</h3>";
-    output += "<b>Last Update:</b> " + received_msg[0] + "<br />";
-    output += "<b>Model:</b> " + received_msg[1]['system']['modelName'] + "<br />";
-    output += "<b>Serial Number:</b> " + received_msg[1]['system']['serialNumber'] + "<br />";
-    output += "<b>EOS Version:</b> " + received_msg[1]['system']['version'] + "<br />";
-
-    output += "<br /><br />";
-    r_msg = received_msg[1]["intfStatus"];
-    c_intfs = gIntfID(res_keys);
-    output += disIntfs(r_msg,c_intfs,received_msg[1]['swImage']);
-    document.getElementById('EosOutput').innerHTML = output;
+    var res_keys = Object.keys(received_msg[2]['intfStatus']);
     
+    // Check to see if this is the initial data dump
+    if (received_msg[0] == "0") {
+        document.getElementById('swHostname').innerHTML = received_msg[2]['hostname'];
+        document.getElementById('eosModel').innerHTML = received_msg[2]['system']['modelName'];
+        document.getElementById('serialNumber').innerHTML = received_msg[2]['system']['serialNumber'];
+        document.getElementById('eosVersion').innerHTML = received_msg[2]['system']['version'];
+        document.getElementById('lastUpdate').innerHTML = received_msg[1];
+        document.getElementById('eosImage').innerHTML = "<img src='imgs/" + received_msg[2]['swImage'] + "'>";
+        r_msg = received_msg[2]["intfStatus"];
+        c_intfs = gIntfID(res_keys);
+        output += disIntfs(r_msg,c_intfs,received_msg[2]["intfData"]);
+        document.getElementById('EosOutput').innerHTML = output;
+    }
+    else {
+        document.getElementById('lastUpdate').innerHTML = received_msg[1];
+        r_msg = received_msg[2]["intfStatus"];
+        intf_data = received_msg[2]["intfData"];
+        c_intfs = gIntfID(res_keys);
+        output += disIntfs(r_msg,c_intfs,received_msg[2]["intfData"]);
+        document.getElementById('EosOutput').innerHTML = output;
+    } 
 };
 /*
 window.addEventListener("load", function() {
@@ -112,8 +125,15 @@ function getIntfType(intInfo) {
     }
 }
 
-function disIntfs(rData,rIntfs,swImg) {
-    var t_output = "<div class='swImg'><img src='imgs/" + swImg + "'><div class='rTable' style='top:25px;left:17px;'><div class='rTableRow'>";
+function getBW(bits) {
+    var sizes = ['Bits/s', 'Kb/s', 'Mb/s', 'Gb/s', 'Tb/s'];
+    if (bits == 0) return '0 Bit/s';
+    var i = parseInt(Math.floor(Math.log(bits) / Math.log(1024)));
+    return Math.round(bits / Math.pow(1000, i), 2) + ' ' + sizes[i];
+ };
+
+function disIntfs(rData,rIntfs,dIntfs) {
+    var t_output = "<div class='rTable' style='top:25px;left:17px;'><div class='rTableRow'>";
     var row_top = "", row_bottom="";
     var i;
     for (i = 0; i <= 49; i++) {
@@ -134,6 +154,7 @@ function disIntfs(rData,rIntfs,swImg) {
                     row_top += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
                     row_top += "Desc: " + iInfo['description'] + "<br />";
                     row_top += "Status: " + iInfo["linkStatus"] + "<br />";
+                    row_top += "Bandwidth (In/Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + "/" + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
                     row_top += "Mode: " + getIntfType(iInfo) + "<br />";
                     row_top += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
@@ -144,6 +165,7 @@ function disIntfs(rData,rIntfs,swImg) {
                     row_bottom += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
                     row_bottom += "Desc: " + iInfo['description'] + "<br />";
                     row_bottom += "Status: " + iInfo["linkStatus"] + "<br />";
+                    row_bottom += "Bandwidth (In/Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + "/" + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
                     row_bottom += "Mode: " + getIntfType(iInfo) + "<br />";
                     row_bottom += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
