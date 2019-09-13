@@ -154,7 +154,7 @@ function disIntfs(rData,rIntfs,dIntfs) {
                     row_top += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
                     row_top += "Desc: " + iInfo['description'] + "<br />";
                     row_top += "Status: " + iInfo["linkStatus"] + "<br />";
-                    row_top += "Bandwidth (In/Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + "/" + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
+                    row_top += "Bandwidth (In|Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + " | " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
                     row_top += "Mode: " + getIntfType(iInfo,dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]) + "<br />";
                     row_top += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
@@ -165,7 +165,7 @@ function disIntfs(rData,rIntfs,dIntfs) {
                     row_bottom += "<div class='" + intType + "Intf" + t_class + "'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
                     row_bottom += "Desc: " + iInfo['description'] + "<br />";
                     row_bottom += "Status: " + iInfo["linkStatus"] + "<br />";
-                    row_bottom += "Bandwidth (In/Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + "/" + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
+                    row_bottom += "Bandwidth (In|Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + " | " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
                     row_bottom += "Mode: " + getIntfType(iInfo,dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]) + "<br />";
                     row_bottom += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
