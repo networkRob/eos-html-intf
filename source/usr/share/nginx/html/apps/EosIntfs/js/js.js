@@ -109,7 +109,7 @@ function checkStatus(iStatus) {
     }
 }
 
-function getIntfType(intInfo) {
+function getIntfType(intInfo,intData) {
     var intfFor = intInfo["vlanInformation"]["interfaceForwardingModel"];
     if (intfFor == "dataLink") {
         return intInfo["vlanInformation"]["vlanExplanation"];
@@ -118,7 +118,7 @@ function getIntfType(intInfo) {
         return "Access<br />VLAN: " + intInfo["vlanInformation"]["vlanId"];
     }
     else if (intfFor == "routed") {
-        return "Routed";
+        return "Routed<br />IP: " + intData["interfaceAddress"][0]["primaryIp"]["address"] + "/" + intData["interfaceAddress"][0]["primaryIp"]["maskLen"];
     }
     else {
         return "Trunk";
@@ -155,7 +155,7 @@ function disIntfs(rData,rIntfs,dIntfs) {
                     row_top += "Desc: " + iInfo['description'] + "<br />";
                     row_top += "Status: " + iInfo["linkStatus"] + "<br />";
                     row_top += "Bandwidth (In/Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + "/" + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
-                    row_top += "Mode: " + getIntfType(iInfo) + "<br />";
+                    row_top += "Mode: " + getIntfType(iInfo,dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]) + "<br />";
                     row_top += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
                 else {
@@ -166,7 +166,7 @@ function disIntfs(rData,rIntfs,dIntfs) {
                     row_bottom += "Desc: " + iInfo['description'] + "<br />";
                     row_bottom += "Status: " + iInfo["linkStatus"] + "<br />";
                     row_bottom += "Bandwidth (In/Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + "/" + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
-                    row_bottom += "Mode: " + getIntfType(iInfo) + "<br />";
+                    row_bottom += "Mode: " + getIntfType(iInfo,dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]) + "<br />";
                     row_bottom += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
                 }
             }
