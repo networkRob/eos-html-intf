@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.1
+__version__ = 0.2
 
 from jsonrpclib import Server
 import json, socket, time
@@ -62,16 +62,22 @@ class lSwitch:
             "show interfaces status",
             "show hostname",
             "show version",
-            "show interfaces"
+            "show interfaces",
+            "show extensions"
         )
         self.data = {
             'intfStatus': self.swData[0]['interfaceStatuses'],
             'hostname': self.swData[1]['fqdn'],
             'system': self.swData[2],
             'intfData': self.swData[3],
+            'extensions': self.parseExtensions(self.swData[4]['extensions']),
             'swImage': self.getSwImg()
-            
         }
+    def parseExtensions(self,eExt):
+        eout = []
+        for ext in eExt:
+            eout.append({'name':ext,'version':eExt[ext]['version'] + "/" + eExt[ext]['release'],'status':eExt[ext]['status']})
+        return(eout)
     def runC(self,*cmds):
         res = self.l_sw.runCmds(1,cmds)
         return(res)
@@ -96,12 +102,13 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=5),self.update_client)
     
     def update_client(self):
-        try:
+        while True:
+        # try:
             lo_sw.getData()
             #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
             self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
-        finally:
-            self.schedule_update()
+        # finally:
+        #     self.schedule_update()
  
     def on_close(self):
         print 'connection closed'

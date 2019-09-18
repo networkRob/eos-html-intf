@@ -5,6 +5,9 @@
 .swImg img {
     float: left;
 }
+th, td {
+    padding: 5px;
+}
 .rTable {
     display: block;
     position: absolute;

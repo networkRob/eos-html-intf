@@ -26,6 +26,7 @@ ws.onmessage = function (evt)
         document.getElementById('serialNumber').innerHTML = received_msg[2]['system']['serialNumber'];
         document.getElementById('eosVersion').innerHTML = received_msg[2]['system']['version'];
         document.getElementById('lastUpdate').innerHTML = received_msg[1];
+        document.getElementById('eosExtensions').innerHTML = disExt(received_msg[2]['extensions']);
         document.getElementById('eosImage').innerHTML = "<img src='imgs/" + received_msg[2]['swImage'] + "'>";
         r_msg = received_msg[2]["intfStatus"];
         c_intfs = gIntfID(res_keys);
@@ -34,6 +35,7 @@ ws.onmessage = function (evt)
     }
     else {
         document.getElementById('lastUpdate').innerHTML = received_msg[1];
+        document.getElementById('eosExtensions').innerHTML = disExt(received_msg[2]['extensions']);
         r_msg = received_msg[2]["intfStatus"];
         intf_data = received_msg[2]["intfData"];
         c_intfs = gIntfID(res_keys);
@@ -50,6 +52,15 @@ window.addEventListener("load", function() {
     });
 });
 */
+function disExt(eExt) {
+    var e_output = "<table><tr><th>Extension</th><th>Version</th><th>Status</th></tr>";
+    // e_output = eExt[0]['version'];
+    for (i = 0; i < eExt.length; i++) {
+        e_output += "<tr><td>" + eExt[i]['name'] + "</td><td>" + eExt[i]['version'] + "</td><td>" + eExt[i]['status'] + "</td></tr>";
+    }
+    e_output += "</table>"
+    return e_output;
+}
 function conInt(prInt) {
     var nInt;
     var cDict = {};
