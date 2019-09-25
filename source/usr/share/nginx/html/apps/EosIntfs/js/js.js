@@ -29,7 +29,9 @@ ws.onmessage = function (evt)
         document.getElementById('eosExtensions').innerHTML = disExt(received_msg[2]['extensions']);
         document.getElementById('eosImage').innerHTML = "<img src='imgs/" + received_msg[2]['swImage'] + "'>";
         r_msg = received_msg[2]["intfStatus"];
-        r_idata = received_msg[2]["intfData"]
+        r_idata = received_msg[2]["intfData"];
+        r_vlans = received_msg[2]["vlans"];
+        r_vlan_ids = Object.keys(r_vlans);
         c_intfs = gIntfID(res_keys);
         output += disIntfs(r_msg,c_intfs,r_idata);
         document.getElementById('EosOutput').innerHTML = output;
@@ -39,8 +41,10 @@ ws.onmessage = function (evt)
         document.getElementById('lastUpdate').innerHTML = received_msg[1];
         document.getElementById('eosExtensions').innerHTML = disExt(received_msg[2]['extensions']);
         r_msg = received_msg[2]["intfStatus"];
-        r_idata = received_msg[2]["intfData"]
-        intf_data = received_msg[2]["intfData"];
+        r_idata = received_msg[2]["intfData"];
+        r_vlans = received_msg[2]["vlans"];
+        r_vlan_ids = Object.keys(r_vlans);
+        // intf_data = received_msg[2]["intfData"];
         c_intfs = gIntfID(res_keys);
         output += disIntfs(r_msg,c_intfs,r_idata);
         document.getElementById('EosOutput').innerHTML = output;
@@ -48,7 +52,27 @@ ws.onmessage = function (evt)
 };
 
 function formUpdate(eName) {
-    var upData = {intf: eName, status: document.getElementById("adminStatus").value};
+    var tmpVLAN = document.getElementById("accessVlan");
+    var tmpIP = document.getElementById("ipAddress");
+    if (tmpVLAN) {
+        var aVLAN = tmpVLAN.value;
+    }
+    else {
+        var aVLAN = "";
+    }
+    if (tmpIP) {
+        var newIP = tmpIP.value;
+    }
+    else {
+        var newIP = "";
+    }
+    var upData = {
+        intf: eName, 
+        status: document.getElementById("adminStatus").value,
+        description: document.getElementById("iDesc").value,
+        accessvlan: aVLAN,
+        ipaddress: newIP,
+    };
     ws.send(JSON.stringify({type: "IntfUpdate", data: upData}));
 }
 /*
@@ -163,12 +187,37 @@ function disIntfDetail(eName) {
         i_output +="<option value='shutdown'>Shutdown</option><option value='no shutdown' selected>No Shutdown</option></select>";
     }
     i_output += "<br />";
-    if (iInfo["vlanInformation"]["interfaceMode"] == 'routed') {
-        i_output += "Mode: <input type='text' id='mode' value='" + iInfo["vlanInformation"]["interfaceMode"] + "'><br />";
-        i_output += "IP Address: <input type='text' id='ipAddress' value='" + dInfo["interfaceAddress"][0]["primaryIp"]["address"] + "/" + dInfo["interfaceAddress"][0]["primaryIp"]["maskLen"] +"'><br />";
+    if (iInfo["vlanInformation"]["interfaceForwardingModel"] == 'routed') {
+        i_output += "Mode: " + iInfo["vlanInformation"]["interfaceForwardingModel"] + "<br />";
+        // Disable the modifying of a Port's mode
+        // i_output += "Mode: <input type='text' id='mode' value='" + iInfo["vlanInformation"]["interfaceMode"] + "'><br />";
+        i_output += "IP Address: <input type='text' id='ipAddress' value='" + dInfo["interfaceAddress"][0]["primaryIp"]["address"] + "/" + dInfo["interfaceAddress"][0]["primaryIp"]["maskLen"] +"'>";
         // console.log(JSON.stringify(dInfo));
     }
-    i_output += "<br /><input type='button' onclick='formUpdate(\"" + eName + "\")' value='Update Interface'></form>";
+    else if (iInfo["vlanInformation"]["interfaceForwardingModel"] == "bridged" && iInfo["vlanInformation"]["interfaceMode"] == "bridged") {
+        i_output += "Mode: access<br />";
+        i_output += "Vlan: ";
+        i_output += "<select id='accessVlan'>";
+        for (i = 0; i < r_vlan_ids.length; i++) {
+            if (r_vlan_ids[i] == iInfo["vlanInformation"]["vlanId"]) {
+                i_output += "<option value='" + r_vlan_ids[i] + "' selected>" + r_vlan_ids[i] + "</option>";
+            }
+            else {
+                i_output += "<option value='" + r_vlan_ids[i] + "'>" + r_vlan_ids[i] + "</option>";
+            }
+        }
+        i_output += "</select>";
+        
+    }
+    else if (iInfo["vlanInformation"]["interfaceForwardingModel"] == 'dataLink') {
+        i_output += "Mode: " + iInfo["vlanInformation"]["vlanExplanation"];
+    }
+    else {
+        i_output += "Mode: trunk";
+    }
+    i_output += "<br />";
+    i_output += "Description: <input type='text' id='iDesc' value='" + iInfo['description'] + "'><br />";
+    i_output += "<input type='button' onclick='formUpdate(\"" + eName + "\")' value='Update Interface'></form>";
     document.getElementById('intfDetail').innerHTML = i_output;
 }
 

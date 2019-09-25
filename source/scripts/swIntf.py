@@ -64,7 +64,8 @@ class lSwitch:
             "show hostname",
             "show version",
             "show interfaces",
-            "show extensions"
+            "show extensions",
+            "show vlan"
         )
         self.data = {
             'intfStatus': self.swData[0]['interfaceStatuses'],
@@ -72,11 +73,21 @@ class lSwitch:
             'system': self.swData[2],
             'intfData': self.swData[3],
             'extensions': self.parseExtensions(self.swData[4]['extensions']),
-            'swImage': self.getSwImg()
+            'swImage': self.getSwImg(),
+            'vlans': self.swData[5]['vlans']
         }
     def intfConfigure(self,eData):
-        # cmds = ["enable","configure",'interface {}'.format(eData['intf']),eData['status'],'end']
-        res = self.runC("enable","configure",'interface {}'.format(eData['intf']),eData['status'],'end')
+        cmds = ["enable","configure",'interface {}'.format(eData['intf']),eData['status']]
+        if eData['description']:
+            cmds.append("description {}".format(eData['description']))
+        else:
+            cmds.append("no description")
+        if eData['accessvlan']:
+            cmds.append("switchport access vlan {}".format(eData['accessvlan']))
+        if eData['ipaddress']:
+            cmds.append("ip address {}".format(eData['ipaddress']))
+        cmds.append('end')
+        res = self.runC(*cmds)
         print(res)
 
     def parseExtensions(self,eExt):
@@ -98,7 +109,6 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         print("New connection from: {}".format(self.request.remote_ip))
-        print(dir(self.request.headers))
         print(self.request.headers)
         lo_sw.getData()
         #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
@@ -114,9 +124,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             elif recv['type'] == 'IntfUpdate':
                 cdata = recv['data']
                 lo_sw.intfConfigure(recv['data'])
+                print(cdata)
         except:
             print("Wrong message format sent.")
-        print(cdata)
         
 
     def schedule_update(self):
