@@ -8,6 +8,13 @@
 th, td {
     padding: 5px;
 }
+.sData {
+    width: 100%;
+}
+.sData td {
+    text-align: left;
+    vertical-align: top;
+}
 .rTable {
     display: block;
     position: absolute;

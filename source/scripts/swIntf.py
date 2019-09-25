@@ -48,6 +48,7 @@ import tornado.ioloop
 import tornado.web
 from time import sleep
 from datetime import timedelta, datetime
+import json
 
 HOST = ''
 PORT = 50019
@@ -73,14 +74,21 @@ class lSwitch:
             'extensions': self.parseExtensions(self.swData[4]['extensions']),
             'swImage': self.getSwImg()
         }
+    def intfConfigure(self,eData):
+        # cmds = ["enable","configure",'interface {}'.format(eData['intf']),eData['status'],'end']
+        res = self.runC("enable","configure",'interface {}'.format(eData['intf']),eData['status'],'end')
+        print(res)
+
     def parseExtensions(self,eExt):
         eout = []
         for ext in eExt:
             eout.append({'name':ext,'version':eExt[ext]['version'] + "/" + eExt[ext]['release'],'status':eExt[ext]['status']})
         return(eout)
+
     def runC(self,*cmds):
         res = self.l_sw.runCmds(1,cmds)
         return(res)
+
     def getSwImg(self):
         mn = self.swData[2]['modelName'].lower().split('-')
         swName = mn[:len(mn)-1]
@@ -89,26 +97,41 @@ class lSwitch:
 class WSHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
-        print 'new connection'
+        print("New connection from: {}".format(self.request.remote_ip))
+        print(dir(self.request.headers))
+        print(self.request.headers)
         lo_sw.getData()
         #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
         self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
         self.schedule_update()
     
     def on_message(self,message):
-        print("Received {}".format(message))
+        cdata = ""
+        try:
+            recv = json.loads(message)
+            if recv['type'] == 'Hello':
+                cdata = recv['data']
+            elif recv['type'] == 'IntfUpdate':
+                cdata = recv['data']
+                lo_sw.intfConfigure(recv['data'])
+        except:
+            print("Wrong message format sent.")
+        print(cdata)
+        
 
     def schedule_update(self):
-        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=5),self.update_client)
+        self.timeout = tornado.ioloop.IOLoop.instance().add_timeout(timedelta(seconds=1),self.update_client)
     
     def update_client(self):
-        while True:
-        # try:
+        try:
             lo_sw.getData()
             #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
             self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
-        # finally:
-        #     self.schedule_update()
+            # sleep(30)
+        # except:
+        #     print("Connection closed:")
+        finally:
+            self.schedule_update()
  
     def on_close(self):
         print 'connection closed'
