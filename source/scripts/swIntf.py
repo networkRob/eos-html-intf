@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.2
+__version__ = 0.3
 
 from jsonrpclib import Server
 import json, socket, time
@@ -58,8 +58,11 @@ all_cons = []
 tdelay = 5
 class lSwitch:
     def __init__(self):
+        self.swInfo = {}
         self.l_sw = Server("unix:/var/run/command-api.sock")
         self.getData()
+        
+
     def getData(self):
         self.swData = self.runC(
             "show interfaces status",
@@ -70,31 +73,130 @@ class lSwitch:
             "show vlan",
             "show interfaces trunk"
         )
-        self.data = {
-            'intfStatus': self.swData[0]['interfaceStatuses'],
-            'hostname': self.swData[1]['fqdn'],
-            'system': self.swData[2],
-            'intfData': self.swData[3],
-            'extensions': self.parseExtensions(self.swData[4]['extensions']),
-            'swImage': self.getSwImg(),
-            'vlans': self.swData[5]['vlans'],
-            'trunks': self.getTrunkVlans(self.swData[0]['interfaceStatuses'])
-        }
+
+        self.swInfo['system'] = self.evalSystem()
+        self.swInfo['interfaces'] = self.evalIntfs()
+        self.swInfo['interfaceData'] = self.intfListToDict()
+        self.swInfo['vlans'] = self.evalVlans()
+
+        # self.data = {
+        #     'intfStatus': self.swData[0]['interfaceStatuses'],
+        #     'hostname': self.swData[1]['fqdn'],
+        #     'system': self.swData[2],
+        #     'intfData': self.swData[3],
+        #     'extensions': self.parseExtensions(self.swData[4]['extensions']),
+        #     'swImage': self.getSwImg(),
+        #     'vlans': self.swData[5]['vlans'],
+        #     'trunks': self.getTrunkVlans(self.swData[0]['interfaceStatuses']),
+        # }
     
-    def getTrunkVlans(self,intfs):
-        trunk_intfs = {}
-        for intf in intfs:
-            if 'interfaceMode' in intfs[intf]['vlanInformation']:
-                if intfs[intf]['vlanInformation']['interfaceMode'] == 'trunk':
-                    tmp_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
-                    trunk_intfs[intf] = {'native': tmp_vlan['trunks'][intf]['nativeVlan']}
-                    if tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
-                        trunk_intfs[intf]['allowed'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
-                        trunk_intfs[intf]['active'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
-                    else:
-                        trunk_intfs[intf]['allowed'] = 'all'
-                        trunk_intfs[intf]['active'] = map(int, self.swData[5]['vlans'].keys())
-        return(trunk_intfs)
+    def evalSystem(self):
+        tmpSw = {
+            'hostname': self.swData[1]['fqdn'],
+            'model': self.swData[2]['modelName'],
+            'serialNumber': self.swData[2]['serialNumber'],
+            'systemMac': self.swData[2]['systemMacAddress'],
+            'eosVersion': self.swData[2]['version'],
+            'hwRev': self.swData[2]['hardwareRevision'],
+            'swImg': self.getSwImg(self.swData[2]['modelName']),
+            'extensions': self.parseExtensions(self.swData[4]['extensions'])
+        }
+        return(tmpSw)
+    
+    def evalVlans(self):
+        vlanData = []
+        tmpVlan = self.swData[5]['vlans'].keys()
+        tmpVlan = map(int, tmpVlan)
+        tmpVlan.sort()
+        for vlan in tmpVlan:
+            vlanData.append({'id':vlan,'name':self.swData[5]['vlans'][vlan]['name']})
+        return(vlanData)
+
+    def evalIntfs(self):
+        intfData = []
+        tmpEthIntf = []
+        tmpPcIntf = []
+        tmpMaIntf = []
+        for intf in self.swData[0]['interfaceStatuses']:
+            if 'Ethernet' in intf:
+                if '/' not in intf:
+                    tmpEthIntf.append(int(intf.replace('Ethernet','')))
+                else:
+                    tmpEthIntf.append(intf.replace('Ethernet',''))
+            elif 'Port-Channel' in intf:
+                tmpPcIntf.append(intf.replace('Port-Channel',''))
+            elif 'Management' in intf:
+                tmpMaIntf.append(intf.replace('Management',''))
+        tmpEthIntf.sort()
+        tmpPcIntf.sort()
+        tmpMaIntf.sort()
+        intfOrder = map(lambda x: 'Ethernet' + str(x), tmpEthIntf) + map(lambda x: 'Port-Channel' + str(x), tmpPcIntf) + map(lambda x: 'Management' + str(x), tmpMaIntf)
+        for intf in intfOrder:
+            tmp_intf_status = self.swData[0]['interfaceStatuses'][intf]
+            tmp_intf_data = self.swData[3]['interfaces'][intf]
+            tmpDict = {
+                'intf': intf,
+                'status': tmp_intf_status['linkStatus'],
+                'rBit': tmp_intf_data['interfaceStatistics']['inBitsRate'],
+                'xBit': tmp_intf_data['interfaceStatistics']['outBitsRate'],
+                'burnedAddress': tmp_intf_data['burnedInAddress'],
+                'mtu': tmp_intf_data['mtu'],
+                'description': tmp_intf_data['description'],
+                'xcvrType': tmp_intf_status['interfaceType'],
+                'ipAddress': '',
+                'nativeVlan': '',
+                'vlanId': '',
+                'allowedVlans': '',
+                'activeVlans': '',
+                'channelGroup': '',
+            }
+            # Set the interface mode
+            if 'interfaceMode' in tmp_intf_status['vlanInformation']:
+                tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceMode']
+            else:
+                tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceForwardingModel']
+            # Check if routed, get IP address
+            if tmpDict['mode'] == 'routed':
+                tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress']['primaryIp']['address'] + '/' + tmp_intf_data['interfaceAddress']['primaryIp']['mask']
+            elif tmpDict['mode'] == 'bridged':
+                tmpDict['vlanId'] = tmp_intf_status['vlanInformation']['vlanId']
+            elif tmpDict['mode'] == 'trunk':
+                tmp_trunk_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
+                tmpDict['nativeVlan'] = tmp_trunk_vlan['trunks'][intf]['nativeVlan']
+                print(intf,tmp_trunk_vlan['trunks'][intf])
+                if tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
+                    tmpDict['allowedVlans'] = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+                    tmpDict['activeVlans'] = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+                else:
+                    tmpDict['allowedVlans'] = "all"
+                    tmpDict['activeVlans'] = tmp_trunk_vlan['trunks'][intf]['activeVlans']
+            elif tmpDict['mode'] == 'dataLink':
+                tmpDict['channelGroup'] = tmp_intf_status['vlanInformation']['vlanExplanation']
+            intfData.append(tmpDict)
+        return(intfData)
+    
+    def intfListToDict(self):
+        tmpIntf = {}
+        for intf in swInfo['interfaces']:
+            tmpIntf[intf]['intf'] = intf
+        return(tmpIntf)
+
+
+        
+    # def getTrunkVlans(self,intfs):
+    #     trunk_intfs = {}
+    #     for intf in intfs:
+    #         if 'interfaceMode' in intfs[intf]['vlanInformation']:
+    #             if intfs[intf]['vlanInformation']['interfaceMode'] == 'trunk':
+    #                 tmp_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
+    #                 trunk_intfs[intf] = {'native': tmp_vlan['trunks'][intf]['nativeVlan']}
+    #                 if tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
+    #                     trunk_intfs[intf]['allowed'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+    #                     trunk_intfs[intf]['active'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+    #                 else:
+    #                     trunk_intfs[intf]['allowed'] = 'all'
+    #                     trunk_intfs[intf]['active'] = map(int, self.swData[5]['vlans'].keys())
+    #     return(trunk_intfs)
 
     def intfConfigure(self,eData):
         """
@@ -129,8 +231,8 @@ class lSwitch:
         res = self.l_sw.runCmds(1,cmds)
         return(res)
 
-    def getSwImg(self):
-        mn = self.swData[2]['modelName'].lower().split('-')
+    def getSwImg(self,mName):
+        mn = mName.lower().split('-')
         swName = mn[:len(mn)-1]
         return("-".join(swName)+".png")
 
@@ -141,7 +243,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         _to_syslog("New connection from: {}".format(xRemoteIp[len(xRemoteIp)-1]))
         lo_sw.getData()
         #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
-        self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
+        self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
         self.schedule_update()
     
     def on_message(self,message):
@@ -167,7 +269,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         try:
             lo_sw.getData()
             #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
-            self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
+            self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
             # sleep(30)
         # except:
         #     print("Connection closed:")
