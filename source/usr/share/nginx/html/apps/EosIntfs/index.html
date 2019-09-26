@@ -31,15 +31,28 @@
    <div id="content" class="container">
      <div class="content-wrapper">
         <h1>EOS Interface Viewer</h1>
-        <h3><div id="swHostname"></div></h3>
-        <b>Last Update:</b> <span id="lastUpdate"></span><br />
-        <b>Model:</b> <span id="eosModel"></span><br />
-        <b>Serial Number:</b> <span id="serialNumber"></span><br />
-        <b>EOS Version:</b> <span id="eosVersion"></span><br /><br />
+        <table class="sData">
+           <tr>
+              <td style="width:50%">
+                  <h3><div id="swHostname"></div></h3>
+                  <b>Last Update:</b> <span id="lastUpdate"></span><br />
+                  <b>Model:</b> <span id="eosModel"></span><br />
+                  <b>Serial Number:</b> <span id="serialNumber"></span><br />
+                  <b>EOS Version:</b> <span id="eosVersion"></span><br />
+                  <b>Extensions:</b><br />
+                  <span id="eosExtensions">No Extensions found.</span><br /><br />
+              </td>
+              <td style="width:50%">
+                 <div id="intfDetail"></div>
+              </td>
+           </tr>
+        </table>
+        
         <div class='swImg'>
            <span id="eosImage"></span>
-           <div id="EosOutput">Temp Holder</div>
+           <div id="EosOutput">EOS interface information is loading...</div>
         </div>
+        <div id="testing"></div>
         
      </div> <!-- end content-wrapper -->
    </div> <!-- end content -->
