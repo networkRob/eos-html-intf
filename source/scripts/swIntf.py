@@ -67,7 +67,8 @@ class lSwitch:
             "show version",
             "show interfaces",
             "show extensions",
-            "show vlan"
+            "show vlan",
+            "show interfaces trunk"
         )
         self.data = {
             'intfStatus': self.swData[0]['interfaceStatuses'],
@@ -76,8 +77,25 @@ class lSwitch:
             'intfData': self.swData[3],
             'extensions': self.parseExtensions(self.swData[4]['extensions']),
             'swImage': self.getSwImg(),
-            'vlans': self.swData[5]['vlans']
+            'vlans': self.swData[5]['vlans'],
+            'trunks': self.getTrunkVlans(self.swData[0]['interfaceStatuses'])
         }
+    
+    def getTrunkVlans(self,intfs):
+        trunk_intfs = {}
+        for intf in intfs:
+            if 'interfaceMode' in intfs[intf]['vlanInformation']:
+                if intfs[intf]['vlanInformation']['interfaceMode'] == 'trunk':
+                    tmp_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
+                    trunk_intfs[intf] = {'native': tmp_vlan['trunks'][intf]['nativeVlan']}
+                    if tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
+                        trunk_intfs[intf]['allowed'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+                        trunk_intfs[intf]['active'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+                    else:
+                        trunk_intfs[intf]['allowed'] = 'all'
+                        trunk_intfs[intf]['active'] = map(int, self.swData[5]['vlans'].keys())
+        return(trunk_intfs)
+
     def intfConfigure(self,eData):
         """
         Sends the eAPI commands to the switch for interface configuration.
@@ -89,8 +107,14 @@ class lSwitch:
             cmds.append("no description")
         if eData['accessvlan']:
             cmds.append("switchport access vlan {}".format(eData['accessvlan']))
-        if eData['ipaddress']:
+        elif eData['ipaddress']:
             cmds.append("ip address {}".format(eData['ipaddress']))
+        elif eData['nativevlan']:
+            cmds.append("switchport trunk native vlan {}".format(eData['nativevlan']))
+            if eData['allowvlan'] == 'all':
+                cmds.append("no switchport trunk allowed vlan")
+            else:
+                cmds.append("switchport trunk allowed vlan {}".format(eData['allowvlan']))
         cmds.append('end')
         res = self.runC(*cmds)
         return(res)

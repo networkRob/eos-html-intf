@@ -31,6 +31,7 @@ ws.onmessage = function (evt)
         r_msg = received_msg[2]["intfStatus"];
         r_idata = received_msg[2]["intfData"];
         r_vlans = received_msg[2]["vlans"];
+        r_trunks = received_msg[2]['trunks'];
         r_vlan_ids = Object.keys(r_vlans);
         c_intfs = gIntfID(res_keys);
         output += disIntfs(r_msg,c_intfs,r_idata);
@@ -43,6 +44,7 @@ ws.onmessage = function (evt)
         r_msg = received_msg[2]["intfStatus"];
         r_idata = received_msg[2]["intfData"];
         r_vlans = received_msg[2]["vlans"];
+        r_trunks = received_msg[2]['trunks'];
         r_vlan_ids = Object.keys(r_vlans);
         // intf_data = received_msg[2]["intfData"];
         c_intfs = gIntfID(res_keys);
@@ -51,39 +53,32 @@ ws.onmessage = function (evt)
     } 
 };
 
+function checkId(form_id) {
+    tmp = document.getElementById(form_id);
+    if (tmp) {
+        return tmp.value;
+    }
+    else {
+        return "";
+    }
+}
+
 function formUpdate(eName) {
-    var tmpVLAN = document.getElementById("accessVlan");
-    var tmpIP = document.getElementById("ipAddress");
-    if (tmpVLAN) {
-        var aVLAN = tmpVLAN.value;
-    }
-    else {
-        var aVLAN = "";
-    }
-    if (tmpIP) {
-        var newIP = tmpIP.value;
-    }
-    else {
-        var newIP = "";
-    }
+    var aVLAN = checkId('accessVlan');
+    var newIP = checkId('ipAddress');
+    var nativeVLAN = checkId('nativeVlan');
+    var allowVLAN = checkId('allowVlan');
     var upData = {
         intf: eName, 
         status: document.getElementById("adminStatus").value,
         description: document.getElementById("iDesc").value,
         accessvlan: aVLAN,
         ipaddress: newIP,
+        nativevlan: nativeVLAN,
+        allowvlan: allowVLAN,
     };
     ws.send(JSON.stringify({type: "IntfUpdate", data: upData}));
 }
-/*
-window.addEventListener("load", function() {
-
-    document.getElementById("EOS_CMD").addEventListener("submit", function (event) {
-        event.preventDefault();
-        ws.send(document.getElementById('eCmd').value);
-    });
-});
-*/
 function disExt(eExt) {
     var e_output = "<table><tr><th>Extension</th><th>Version</th><th>Status</th></tr>";
     // e_output = eExt[0]['version'];
@@ -175,10 +170,14 @@ function getBW(bits) {
     return Math.round(bits / Math.pow(1000, i), 2) + ' ' + sizes[i];
  };
 
+ // ===========================
+ // Section to build out interface config
+ // ===========================
 function disIntfDetail(eName) {
     iInfo = r_msg[eName];
     dInfo = r_idata['interfaces'][eName];
     var i_output = "<b>Interface:</b> " + eName + "<form action='#' method='post' id='fdata'>";
+    // Admin status portion
     i_output += "Admin Status: <select id='adminStatus'>";
     if (iInfo['linkStatus'] == 'disabled') {
         i_output +="<option value='shutdown' selected>Shutdown</option><option value='no shutdown'>No Shutdown</option></select>";
@@ -187,12 +186,13 @@ function disIntfDetail(eName) {
         i_output +="<option value='shutdown'>Shutdown</option><option value='no shutdown' selected>No Shutdown</option></select>";
     }
     i_output += "<br />";
+    i_output += "Description: <input type='text' id='iDesc' value='" + iInfo['description'] + "'><br />";
+    // Intferface Mode sections
     if (iInfo["vlanInformation"]["interfaceForwardingModel"] == 'routed') {
         i_output += "Mode: " + iInfo["vlanInformation"]["interfaceForwardingModel"] + "<br />";
         // Disable the modifying of a Port's mode
         // i_output += "Mode: <input type='text' id='mode' value='" + iInfo["vlanInformation"]["interfaceMode"] + "'><br />";
         i_output += "IP Address: <input type='text' id='ipAddress' value='" + dInfo["interfaceAddress"][0]["primaryIp"]["address"] + "/" + dInfo["interfaceAddress"][0]["primaryIp"]["maskLen"] +"'>";
-        // console.log(JSON.stringify(dInfo));
     }
     else if (iInfo["vlanInformation"]["interfaceForwardingModel"] == "bridged" && iInfo["vlanInformation"]["interfaceMode"] == "bridged") {
         i_output += "Mode: access<br />";
@@ -213,10 +213,29 @@ function disIntfDetail(eName) {
         i_output += "Mode: " + iInfo["vlanInformation"]["vlanExplanation"];
     }
     else {
-        i_output += "Mode: trunk";
+        vlans = r_trunks[eName]['active'].sort(function(a, b){return(a-b)});
+        if (r_trunks[eName]['allowed'] == 'all') {
+            allow_vlans = 'all';
+        }
+        else {
+            allow_vlans = r_trunks[eName]['allowed'];
+        }
+        native_vlan = r_trunks[eName]['native'];
+        i_output += "Mode: trunk<br />";
+        i_output += "Native Vlan: <select id='nativeVlan'>";
+        for (i = 0; i < vlans.length; i++) {
+            if (vlans[i] == native_vlan) {
+                i_output += "<option value='" + native_vlan + "' selected>" + native_vlan + "</option>";
+            }
+            else {
+                i_output += "<option value='" + vlans[i] + "'>" + vlans[i] + "</option>";
+            }
+        }
+        i_output += "</select><br />";
+        i_output += "Allowed Vlans: <br />";
+        i_output += "<input style='width:100%' type='text' id='allowVlan' value='" + allow_vlans + "'>";
     }
     i_output += "<br />";
-    i_output += "Description: <input type='text' id='iDesc' value='" + iInfo['description'] + "'><br />";
     i_output += "<input type='button' onclick='formUpdate(\"" + eName + "\")' value='Update Interface'></form>";
     document.getElementById('intfDetail').innerHTML = i_output;
 }
