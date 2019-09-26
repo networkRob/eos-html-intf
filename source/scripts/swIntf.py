@@ -46,10 +46,12 @@ import tornado.httpserver
 import tornado.websocket
 import tornado.ioloop
 import tornado.web
+import syslog
 from time import sleep
 from datetime import timedelta, datetime
 import json
 
+DEBUG = True
 HOST = ''
 PORT = 50019
 all_cons = []
@@ -91,7 +93,7 @@ class lSwitch:
             cmds.append("ip address {}".format(eData['ipaddress']))
         cmds.append('end')
         res = self.runC(*cmds)
-        print(res)
+        return(res)
 
     def parseExtensions(self,eExt):
         eout = []
@@ -111,14 +113,15 @@ class lSwitch:
 class WSHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
-        print("New connection from: {}".format(self.request.remote_ip))
-        print(self.request.headers)
+        xRemoteIp = self.request.headers['X-Forwarded-For'].split(':')
+        _to_syslog("New connection from: {}".format(xRemoteIp[len(xRemoteIp)-1]))
         lo_sw.getData()
         #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
         self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.data]))
         self.schedule_update()
     
     def on_message(self,message):
+        xRemoteIp = self.request.headers['X-Forwarded-For'].split(':')
         cdata = ""
         try:
             recv = json.loads(message)
@@ -126,10 +129,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 cdata = recv['data']
             elif recv['type'] == 'IntfUpdate':
                 cdata = recv['data']
-                lo_sw.intfConfigure(recv['data'])
-                print(cdata)
+                conf_response = lo_sw.intfConfigure(recv['data'])
+                tmp_msg = "[{}] Executed Config change: {}".format(xRemoteIp[len(xRemoteIp)-1],cdata)
+                _to_syslog(tmp_msg)
         except:
-            print("Wrong message format sent.")
+            _to_syslog("Wrong message format sent.")
         
 
     def schedule_update(self):
@@ -147,23 +151,29 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             self.schedule_update()
  
     def on_close(self):
-        print 'connection closed'
+        _to_syslog('connection closed')
         tornado.ioloop.IOLoop.instance().remove_timeout(self.timeout)
  
     def check_origin(self, origin):
-        return True
+        return(True)
     
+def _to_syslog(sys_msg):
+        syslog.syslog("%%GUI-6-LOG: {}".format(sys_msg))
+        if DEBUG:
+            print(sys_msg)
+
 application = tornado.web.Application([(r'/eos', WSHandler),])
 
 if __name__ == "__main__":
+    syslog.openlog('EOS-INTF-GUI',0,syslog.LOG_LOCAL4)
     lo_sw = lSwitch()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(50019)
     #myIP = socket.gethostbyname(socket.gethostname())
     #print '*** Websocket Server Started at %s***' % myIP
-    print('*** Websocket Server Started ***')
+    _to_syslog('*** Websocket Server Started ***')
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         tornado.ioloop.IOLoop.instance().stop()
-        print("*** Websocked Server Stopped ***")
+        _to_syslog("*** Websocked Server Stopped ***")
