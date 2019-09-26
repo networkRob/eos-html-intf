@@ -77,6 +77,9 @@ class lSwitch:
             'vlans': self.swData[5]['vlans']
         }
     def intfConfigure(self,eData):
+        """
+        Sends the eAPI commands to the switch for interface configuration.
+        """
         cmds = ["enable","configure",'interface {}'.format(eData['intf']),eData['status']]
         if eData['description']:
             cmds.append("description {}".format(eData['description']))
