@@ -76,19 +76,9 @@ class lSwitch:
 
         self.swInfo['system'] = self.evalSystem()
         self.swInfo['interfaces'] = self.evalIntfs()
-        self.swInfo['interfaceData'] = self.intfListToDict()
+        self.swInfo['interfaceData'] = self._intfListToDict()
         self.swInfo['vlans'] = self.evalVlans()
-
-        # self.data = {
-        #     'intfStatus': self.swData[0]['interfaceStatuses'],
-        #     'hostname': self.swData[1]['fqdn'],
-        #     'system': self.swData[2],
-        #     'intfData': self.swData[3],
-        #     'extensions': self.parseExtensions(self.swData[4]['extensions']),
-        #     'swImage': self.getSwImg(),
-        #     'vlans': self.swData[5]['vlans'],
-        #     'trunks': self.getTrunkVlans(self.swData[0]['interfaceStatuses']),
-        # }
+        self.swInfo['vlansData'] = self._vlanListToDict()
     
     def evalSystem(self):
         tmpSw = {
@@ -105,7 +95,7 @@ class lSwitch:
     
     def evalVlans(self):
         vlanData = []
-        tmpVlan = self._sortTmpVlans()
+        tmpVlan = map(str,self._sortTmpVlans())
         for vlan in tmpVlan:
             vlanData.append({'id':vlan,'name':self.swData[5]['vlans'][vlan]['name']})
         return(vlanData)
@@ -162,7 +152,9 @@ class lSwitch:
                 tmp_trunk_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
                 tmpDict['nativeVlan'] = tmp_trunk_vlan['trunks'][intf]['nativeVlan']
                 if tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
-                    tmpDict['allowedVlans'] = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+                    tmp_vlans = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
+                    tmp_vlans.sort()
+                    tmpDict['allowedVlans'] = tmp_vlans
                     tmpDict['activeVlans'] = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
                 elif 'activeVlans' in tmp_trunk_vlan['trunks'][intf]:
                     tmpDict['allowedVlans'] = "all"
@@ -180,30 +172,19 @@ class lSwitch:
         tmpVlan = map(int, tmpVlan)
         tmpVlan.sort()
         return(tmpVlan)
+    
+    def _vlanListToDict(self):
+        tmpVlan = {}
+        for vlan in self.swInfo['vlans']:
+            tmpVlan[vlan['id']] = vlan
+        return(tmpVlan)
 
-    def intfListToDict(self):
+    def _intfListToDict(self):
         tmpIntf = {}
         for intf in self.swInfo['interfaces']:
             tmpIntf[intf['intf']] = intf
         return(tmpIntf)
-
-
         
-    # def getTrunkVlans(self,intfs):
-    #     trunk_intfs = {}
-    #     for intf in intfs:
-    #         if 'interfaceMode' in intfs[intf]['vlanInformation']:
-    #             if intfs[intf]['vlanInformation']['interfaceMode'] == 'trunk':
-    #                 tmp_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
-    #                 trunk_intfs[intf] = {'native': tmp_vlan['trunks'][intf]['nativeVlan']}
-    #                 if tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
-    #                     trunk_intfs[intf]['allowed'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
-    #                     trunk_intfs[intf]['active'] = tmp_vlan['trunks'][intf]['allowedVlans']['vlanIds']
-    #                 else:
-    #                     trunk_intfs[intf]['allowed'] = 'all'
-    #                     trunk_intfs[intf]['active'] = map(int, self.swData[5]['vlans'].keys())
-    #     return(trunk_intfs)
-
     def intfConfigure(self,eData):
         """
         Sends the eAPI commands to the switch for interface configuration.
