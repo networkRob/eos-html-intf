@@ -105,9 +105,7 @@ class lSwitch:
     
     def evalVlans(self):
         vlanData = []
-        tmpVlan = self.swData[5]['vlans'].keys()
-        tmpVlan = map(int, tmpVlan)
-        tmpVlan.sort()
+        tmpVlan = self._sortTmpVlans()
         for vlan in tmpVlan:
             vlanData.append({'id':vlan,'name':self.swData[5]['vlans'][vlan]['name']})
         return(vlanData)
@@ -139,7 +137,7 @@ class lSwitch:
                 'status': tmp_intf_status['linkStatus'],
                 'rBit': tmp_intf_data['interfaceStatistics']['inBitsRate'],
                 'xBit': tmp_intf_data['interfaceStatistics']['outBitsRate'],
-                'burnedAddress': tmp_intf_data['burnedInAddress'],
+                'physicalAddress': tmp_intf_data['physicalAddress'],
                 'mtu': tmp_intf_data['mtu'],
                 'description': tmp_intf_data['description'],
                 'xcvrType': tmp_intf_status['interfaceType'],
@@ -157,28 +155,36 @@ class lSwitch:
                 tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceForwardingModel']
             # Check if routed, get IP address
             if tmpDict['mode'] == 'routed':
-                tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress']['primaryIp']['address'] + '/' + tmp_intf_data['interfaceAddress']['primaryIp']['mask']
+                tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress'][0]['primaryIp']['address'] + '/' + str(tmp_intf_data['interfaceAddress'][0]['primaryIp']['maskLen'])
             elif tmpDict['mode'] == 'bridged':
                 tmpDict['vlanId'] = tmp_intf_status['vlanInformation']['vlanId']
             elif tmpDict['mode'] == 'trunk':
                 tmp_trunk_vlan = self.runC("show interfaces {} trunk".format(intf))[0]
                 tmpDict['nativeVlan'] = tmp_trunk_vlan['trunks'][intf]['nativeVlan']
-                print(intf,tmp_trunk_vlan['trunks'][intf])
                 if tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']:
                     tmpDict['allowedVlans'] = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
                     tmpDict['activeVlans'] = tmp_trunk_vlan['trunks'][intf]['allowedVlans']['vlanIds']
-                else:
+                elif 'activeVlans' in tmp_trunk_vlan['trunks'][intf]:
                     tmpDict['allowedVlans'] = "all"
                     tmpDict['activeVlans'] = tmp_trunk_vlan['trunks'][intf]['activeVlans']
+                else:
+                    tmpDict['allowedVlans'] = "all"
+                    tmpDict['activeVlans'] = self._sortTmpVlans()
             elif tmpDict['mode'] == 'dataLink':
                 tmpDict['channelGroup'] = tmp_intf_status['vlanInformation']['vlanExplanation']
             intfData.append(tmpDict)
         return(intfData)
     
+    def _sortTmpVlans(self):
+        tmpVlan = self.swData[5]['vlans'].keys()
+        tmpVlan = map(int, tmpVlan)
+        tmpVlan.sort()
+        return(tmpVlan)
+
     def intfListToDict(self):
         tmpIntf = {}
-        for intf in swInfo['interfaces']:
-            tmpIntf[intf]['intf'] = intf
+        for intf in self.swInfo['interfaces']:
+            tmpIntf[intf['intf']] = intf
         return(tmpIntf)
 
 
