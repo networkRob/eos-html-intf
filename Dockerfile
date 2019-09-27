@@ -25,7 +25,7 @@ ENV name='EosIntfGui' version='0.4' release='1'
 
 COPY source tmp
 
-RUN tar -cvf rpmbuild/SOURCES/${name}-${version}-${release}.tar source
+RUN tar -cvf rpmbuild/SOURCES/${name}-${version}-${release}.tar source/*
 
 COPY ${name}.spec rpmbuild/SPECS/
 
