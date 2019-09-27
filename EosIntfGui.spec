@@ -12,8 +12,8 @@ BuildArch: x86_64
 This EOS extenstion will create a HTML GUI for your switch to monitor 
 interfaces and make minor configuration changes to the ports. 
 
-prep
-%setup -q -n ./
+%prep
+%setup -q -n source
 
 %build
 
