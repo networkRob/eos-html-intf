@@ -230,7 +230,12 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         _to_syslog("New connection from: {}".format(xRemoteIp[len(xRemoteIp)-1]))
         lo_sw.getData()
         #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
-        self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
+        self.write_message(json.dumps({
+            'type': "hello",
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'data': lo_sw.swInfo
+        }))
+        # self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
         self.schedule_update()
     
     def on_message(self,message):
@@ -256,7 +261,12 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         try:
             lo_sw.getData()
             #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
-            self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
+            self.write_message(json.dumps({
+                'type': 'update',
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'data': lo_sw.swInfo
+            }))
+            # self.write_message(json.dumps([1,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
             # sleep(30)
         # except:
         #     print("Connection closed:")

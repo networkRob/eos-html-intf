@@ -14,19 +14,19 @@ ws.onmessage = function (evt)
     var output = "";
     var re_data = evt.data;
     var received_msg = JSON.parse(re_data);
-    systemData = received_msg[2]['system'];
-    intfs = received_msg[2]['interfaces'];
-    intfData = received_msg[2]['interfaceData'];
-    vlns = received_msg[2]['vlans'];
-    vlnsData = received_msg[2]['vlansData'];
+    systemData = received_msg['data']['system'];
+    intfs = received_msg['data']['interfaces'];
+    intfData = received_msg['data']['interfaceData'];
+    vlns = received_msg['data']['vlans'];
+    vlnsData = received_msg['data']['vlansData'];
     
     // Check to see if this is the initial data dump
-    if (received_msg[0] == "0") {
+    if (received_msg['type'] == "hello") {
         document.getElementById('swHostname').innerHTML = systemData['hostname'];
         document.getElementById('eosModel').innerHTML = systemData['model'];
         document.getElementById('serialNumber').innerHTML = systemData['serialNumber'];
         document.getElementById('eosVersion').innerHTML = systemData['eosVersion'];
-        document.getElementById('lastUpdate').innerHTML = received_msg[1];
+        document.getElementById('lastUpdate').innerHTML = received_msg['timestamp'];
         document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
         document.getElementById('eosImage').innerHTML = "<img src='imgs/" + systemData['swImg'] + "'>";
         output += disIntfs(intfs);
@@ -34,7 +34,7 @@ ws.onmessage = function (evt)
         disIntfDetail('Ethernet1');
     }
     else {
-        document.getElementById('lastUpdate').innerHTML = received_msg[1];
+        document.getElementById('lastUpdate').innerHTML = received_msg['timestamp'];
         document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
         output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
