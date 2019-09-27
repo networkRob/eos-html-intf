@@ -12,43 +12,31 @@ ws.onopen = function()
 ws.onmessage = function (evt) 
 { 
     var output = "";
-    var i;
-    var x;
     var re_data = evt.data;
-    var c_intfs;
     var received_msg = JSON.parse(re_data);
-    var res_keys = Object.keys(received_msg[2]['intfStatus']);
+    systemData = received_msg[2]['system'];
+    intfs = received_msg[2]['interfaces'];
+    intfData = received_msg[2]['interfaceData'];
+    vlns = received_msg[2]['vlans'];
+    vlnsData = received_msg[2]['vlansData'];
     
     // Check to see if this is the initial data dump
     if (received_msg[0] == "0") {
-        document.getElementById('swHostname').innerHTML = received_msg[2]['hostname'];
-        document.getElementById('eosModel').innerHTML = received_msg[2]['system']['modelName'];
-        document.getElementById('serialNumber').innerHTML = received_msg[2]['system']['serialNumber'];
-        document.getElementById('eosVersion').innerHTML = received_msg[2]['system']['version'];
+        document.getElementById('swHostname').innerHTML = systemData['hostname'];
+        document.getElementById('eosModel').innerHTML = systemData['model'];
+        document.getElementById('serialNumber').innerHTML = systemData['serialNumber'];
+        document.getElementById('eosVersion').innerHTML = systemData['eosVersion'];
         document.getElementById('lastUpdate').innerHTML = received_msg[1];
-        document.getElementById('eosExtensions').innerHTML = disExt(received_msg[2]['extensions']);
-        document.getElementById('eosImage').innerHTML = "<img src='imgs/" + received_msg[2]['swImage'] + "'>";
-        r_msg = received_msg[2]["intfStatus"];
-        r_idata = received_msg[2]["intfData"];
-        r_vlans = received_msg[2]["vlans"];
-        r_trunks = received_msg[2]['trunks'];
-        r_vlan_ids = Object.keys(r_vlans);
-        c_intfs = gIntfID(res_keys);
-        output += disIntfs(r_msg,c_intfs,r_idata);
+        document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
+        document.getElementById('eosImage').innerHTML = "<img src='imgs/" + systemData['swImg'] + "'>";
+        output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
         disIntfDetail('Ethernet1');
     }
     else {
         document.getElementById('lastUpdate').innerHTML = received_msg[1];
-        document.getElementById('eosExtensions').innerHTML = disExt(received_msg[2]['extensions']);
-        r_msg = received_msg[2]["intfStatus"];
-        r_idata = received_msg[2]["intfData"];
-        r_vlans = received_msg[2]["vlans"];
-        r_trunks = received_msg[2]['trunks'];
-        r_vlan_ids = Object.keys(r_vlans);
-        // intf_data = received_msg[2]["intfData"];
-        c_intfs = gIntfID(res_keys);
-        output += disIntfs(r_msg,c_intfs,r_idata);
+        document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
+        output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
     } 
 };
@@ -81,7 +69,6 @@ function formUpdate(eName) {
 }
 function disExt(eExt) {
     var e_output = "<table><tr><th>Extension</th><th>Version</th><th>Status</th></tr>";
-    // e_output = eExt[0]['version'];
     for (i = 0; i < eExt.length; i++) {
         e_output += "<tr><td>" + eExt[i]['name'] + "</td><td>" + eExt[i]['version'] + "</td><td>" + eExt[i]['status'] + "</td></tr>";
     }
@@ -147,19 +134,19 @@ function checkStatus(iStatus) {
     }
 }
 
-function getIntfType(intInfo,intData) {
-    var intfFor = intInfo["vlanInformation"]["interfaceForwardingModel"];
+function getIntfType(eName) {
+    var intfFor = intfData[eName]['mode'];
     if (intfFor == "dataLink") {
-        return intInfo["vlanInformation"]["vlanExplanation"];
+        return intfData[eName]['channelGroup'];
     }
-    else if (intfFor == "bridged" && intInfo["vlanInformation"]["interfaceMode"] == "bridged") {
-        return "Access<br />VLAN: " + intInfo["vlanInformation"]["vlanId"];
+    else if (intfFor == 'bridged') {
+        return "Access<br />VLAN: " + intfData[eName]["vlanId"];
     }
     else if (intfFor == "routed") {
-        return "Routed<br />IP: " + intData["interfaceAddress"][0]["primaryIp"]["address"] + "/" + intData["interfaceAddress"][0]["primaryIp"]["maskLen"];
+        return "Routed<br />IP: " + intfData[eName]["ipAddress"];
     }
-    else {
-        return "Trunk";
+    else if (intfFor == 'trunk' ) {
+        return "Trunk<br />Native Vlan: " + intfData[eName]['nativeVlan'] + "<br />Allowed Vlans: " + intfData[eName]['allowedVlans'];
     }
 }
 
@@ -174,81 +161,90 @@ function getBW(bits) {
  // Section to build out interface config
  // ===========================
 function disIntfDetail(eName) {
-    iInfo = r_msg[eName];
-    dInfo = r_idata['interfaces'][eName];
     var i_output = "<b>Interface:</b> " + eName + "<form action='#' method='post' id='fdata'>";
     // Admin status portion
     i_output += "Admin Status: <select id='adminStatus'>";
-    if (iInfo['linkStatus'] == 'disabled') {
+    if (intfData[eName]['status'] == 'disabled') {
         i_output +="<option value='shutdown' selected>Shutdown</option><option value='no shutdown'>No Shutdown</option></select>";
     }
     else {
         i_output +="<option value='shutdown'>Shutdown</option><option value='no shutdown' selected>No Shutdown</option></select>";
     }
     i_output += "<br />";
-    i_output += "Description: <input type='text' id='iDesc' value='" + iInfo['description'] + "'><br />";
+    i_output += "Description: <input type='text' id='iDesc' value='" + intfData[eName]['description'] + "'><br />";
     // Intferface Mode sections
-    if (iInfo["vlanInformation"]["interfaceForwardingModel"] == 'routed') {
-        i_output += "Mode: " + iInfo["vlanInformation"]["interfaceForwardingModel"] + "<br />";
+    if (intfData[eName]['mode'] == 'routed') {
+        i_output += "Mode: " + intfData[eName]['mode'] + "<br />";
         // Disable the modifying of a Port's mode
         // i_output += "Mode: <input type='text' id='mode' value='" + iInfo["vlanInformation"]["interfaceMode"] + "'><br />";
-        i_output += "IP Address: <input type='text' id='ipAddress' value='" + dInfo["interfaceAddress"][0]["primaryIp"]["address"] + "/" + dInfo["interfaceAddress"][0]["primaryIp"]["maskLen"] +"'>";
+        i_output += "IP Address: <input type='text' id='ipAddress' value='" + intfData[eName]["ipAddress"] +"'>";
     }
-    else if (iInfo["vlanInformation"]["interfaceForwardingModel"] == "bridged" && iInfo["vlanInformation"]["interfaceMode"] == "bridged") {
+    else if (intfData[eName]['mode'] == "bridged") {
         i_output += "Mode: access<br />";
         i_output += "Vlan: ";
         i_output += "<select id='accessVlan'>";
-        for (i = 0; i < r_vlan_ids.length; i++) {
-            if (r_vlan_ids[i] == iInfo["vlanInformation"]["vlanId"]) {
-                i_output += "<option value='" + r_vlan_ids[i] + "' selected>" + r_vlan_ids[i] + "</option>";
+        for (i = 0; i < vlns.length; i++) {
+            if (vlns[i]['id'] == intfData[eName]['vlanId']) {
+                i_output += "<option value='" + vlns[i]['id'] + "' selected>" + vlns[i]['id'] + " - " + vlns[i]['name'] + "</option>";
             }
             else {
-                i_output += "<option value='" + r_vlan_ids[i] + "'>" + r_vlan_ids[i] + "</option>";
+                i_output += "<option value='" + vlns[i]['id'] + "'>" + vlns[i]['id'] + " - " + vlns[i]['name'] + "</option>";
             }
         }
         i_output += "</select>";
         
     }
-    else if (iInfo["vlanInformation"]["interfaceForwardingModel"] == 'dataLink') {
-        i_output += "Mode: " + iInfo["vlanInformation"]["vlanExplanation"];
+    else if (intfData[eName]['mode'] == 'dataLink') {
+        i_output += "Mode: " + intfData[eName]['channelGroup'];
     }
     else {
-        vlans = r_trunks[eName]['active'].sort(function(a, b){return(a-b)});
-        if (r_trunks[eName]['allowed'] == 'all') {
-            allow_vlans = 'all';
-        }
-        else {
-            allow_vlans = r_trunks[eName]['allowed'];
-        }
-        native_vlan = r_trunks[eName]['native'];
         i_output += "Mode: trunk<br />";
         i_output += "Native Vlan: <select id='nativeVlan'>";
-        for (i = 0; i < vlans.length; i++) {
-            if (vlans[i] == native_vlan) {
-                i_output += "<option value='" + native_vlan + "' selected>" + native_vlan + "</option>";
+        if (intfData[eName]['allowedVlans'] == 'all') {
+            for (i = 0; i < vlns.length; i++) {
+                if (vlns[i]['id'] == intfData[eName]['nativeVlan']) {
+                    i_output += "<option value='" + intfData[eName]['nativeVlan'] + "' selected>" + intfData[eName]['nativeVlan'] + " - " + vlnsData[intfData[eName]['nativeVlan']]['name'] + "</option>";
+                }
+                else {
+                    i_output += "<option value='" + vlns[i]['id'] + "'>" + vlns[i]['id'] + " - " + vlns[i]['name'] + "</option>";
+                }
             }
-            else {
-                i_output += "<option value='" + vlans[i] + "'>" + vlans[i] + "</option>";
-            }
+            i_output += "</select><br />";
+            
         }
-        i_output += "</select><br />";
+        else {
+            for (i = 0; i < intfData[eName]['allowedVlans'].length; i++) {
+                if (intfData[eName]['allowedVlans'][i] == intfData[eName]['nativeVlan']){
+                    i_output += "<option value='" + intfData[eName]['nativeVlan'] + "' selected>" + intfData[eName]['nativeVlan'] + "</option>";
+                }
+                else {
+                    i_output += "<option value='" + intfData[eName]['allowedVlans'][i] + "'>" + intfData[eName]['allowedVlans'][i] + "</option>";
+                }
+            }
+            i_output += "</select><br />";
+        }
         i_output += "Allowed Vlans: <br />";
-        i_output += "<input style='width:100%' type='text' id='allowVlan' value='" + allow_vlans + "'>";
+        i_output += "<input style='width:100%' type='text' id='allowVlan' value='" + intfData[eName]['allowedVlans'] + "'>";
     }
     i_output += "<br />";
     i_output += "<input type='button' onclick='formUpdate(\"" + eName + "\")' value='Update Interface'></form>";
     document.getElementById('intfDetail').innerHTML = i_output;
 }
 
-function disIntfs(rData,rIntfs,dIntfs) {
+function disIntfs(swIntfs) {
     var t_output = "<div class='rTable' style='top:25px;left:17px;'><div class='rTableRow'>";
     var row_top = "", row_bottom="";
-    var i;
-    for (i = 0; i <= 49; i++) {
-        if (rIntfs[1][rIntfs[0][i]].indexOf("Ethernet") > -1) {
-            iInfo = rData[rIntfs[1][rIntfs[0][i]]];
-            t_class = checkStatus(iInfo["linkStatus"]);
-            if (t_class) {
+    var ethCount = 0;
+    for (i = 0; i < swIntfs.length; i++) {
+        if (swIntfs[i]['intf'].includes('Ethernet')) {
+            ethCount++  ;
+        }
+    }
+    for (i = 0; i <= ethCount; i++) {
+        if (swIntfs[i]['intf'].indexOf("Ethernet") > -1) {
+            var intfName = swIntfs[i]['intf'];
+            var int_status = checkStatus(intfData[intfName]['status']);
+            if (int_status) {
                 if (i >= 48) {
                     intType = "rQ";
                 }
@@ -259,23 +255,23 @@ function disIntfs(rData,rIntfs,dIntfs) {
                     if (i == 16 || i == 32) {
                         row_top += "<div class='rIntfBreak'></div>";
                     }
-                    row_top += "<div class='" + intType + "Intf" + t_class + "' onclick='disIntfDetail(\"" + rIntfs[1][rIntfs[0][i]] + "\")'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
-                    row_top += "Desc: " + iInfo['description'] + "<br />";
-                    row_top += "Status: " + iInfo["linkStatus"] + "<br />";
-                    row_top += "Bandwidth (In|Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + " | " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
-                    row_top += "Mode: " + getIntfType(iInfo,dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]) + "<br />";
-                    row_top += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
+                    row_top += "<div class='" + intType + "Intf" + int_status + "' onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + intfName + "<br />";
+                    row_top += "Desc: " + intfData[intfName]['description'] + "<br />";
+                    row_top += "Status: " + intfData[intfName]["status"] + "<br />";
+                    row_top += "Bandwidth (In|Out): " + getBW(intfData[intfName]["rBit"]) + " | " + getBW(intfData[intfName]["xBit"]) + "<br />";
+                    row_top += "Mode: " + getIntfType(intfName) + "<br />";
+                    row_top += "Int Type: " + intfData[intfName]['xcvrType'] + "</span></div>";
                 }
                 else {
                     if (i == 17 || i == 33 || i == 48) {
                         row_bottom += "<div class='rIntfBreak'></div>";
                     }
-                    row_bottom += "<div class='" + intType + "Intf" + t_class + "' onclick='disIntfDetail(\"" + rIntfs[1][rIntfs[0][i]] + "\")'>" + rIntfs[1][rIntfs[0][i]].replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + rIntfs[1][rIntfs[0][i]] + "<br />";
-                    row_bottom += "Desc: " + iInfo['description'] + "<br />";
-                    row_bottom += "Status: " + iInfo["linkStatus"] + "<br />";
-                    row_bottom += "Bandwidth (In|Out): " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["inBitsRate"]) + " | " + getBW(dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]["interfaceStatistics"]["outBitsRate"]) + "<br />";
-                    row_bottom += "Mode: " + getIntfType(iInfo,dIntfs["interfaces"][rIntfs[1][rIntfs[0][i]]]) + "<br />";
-                    row_bottom += "Int Type: " + iInfo['interfaceType'] + "</span></div>";
+                    row_bottom += "<div class='" + intType + "Intf" + int_status + "' onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + intfName + "<br />";
+                    row_bottom += "Desc: " + intfData[intfName]['description'] + "<br />";
+                    row_bottom += "Status: " + intfData[intfName]["status"] + "<br />";
+                    row_bottom += "Bandwidth (In|Out): " + getBW(intfData[intfName]["rBit"]) + " | " + getBW(intfData[intfName]["xBit"]) + "<br />";
+                    row_bottom += "Mode: " + getIntfType(intfName) + "<br />";
+                    row_bottom += "Int Type: " + intfData[intfName]['xcvrType'] + "</span></div>";
                 }
             }
         }
