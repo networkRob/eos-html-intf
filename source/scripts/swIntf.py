@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.3
+__version__ = 0.8
 
 from jsonrpclib import Server
 import json, socket, time
