@@ -3,3 +3,4 @@ rpmbuild/
 source/scripts/test
 */.DS_Store
 .DS_Store
+rpm
