@@ -1,6 +1,6 @@
-FROM centos:7.6.1810
+FROM i386/centos:7
 
-RUN yum update -y && yum install -y epel-release rpm-build rpmdevtools sudo && yum install -y python-pip
+RUN yum update -y && yum install -y epel-release rpm-build rpmdevtools sudo
 # RUN yum groupinstall -y "Development tools" "Server Platform Development" "Additional Development" "Compatibility libraries"
 
 RUN useradd builder -u 1000 -m -G users,wheel && \
@@ -19,14 +19,10 @@ USER builder
 
 WORKDIR /home/builder
 
-RUN mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+RUN mkdir -p ~/rpmbuild/{BUILD,RPM,SOURCES,SPECS,SRPMS}
 
-ENV name='EosIntfGui' version='0.4' release='1'
+ENV name='EosIntfGui'
 
-COPY source tmp
+WORKDIR /home/builder/rpmbuild/SPECS
 
-RUN tar -cvf rpmbuild/SOURCES/${name}-${version}-${release}.tar source/*
-
-COPY ${name}.spec rpmbuild/SPECS/
-
-# RUN rpmbuild -v -ba ~/rpmbuild/SPECS/${name}.spec
+CMD rpmbuild -ba ${name}.spec
