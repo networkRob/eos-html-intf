@@ -1,12 +1,12 @@
 Summary: EOS HTML Interface Viewer
 Name: EosIntfGui
-Version: 0.4
-Release: 2
+Version: 0.3
+Release: 1
 License: Arista Networks
 Group: EOS/Extension
 Source0: %{name}-%{version}-%{release}.tar
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}.tar
-BuildArch: i386
+BuildArch: i686
 
 %description
 This EOS extenstion will create a HTML GUI for your switch to monitor 
