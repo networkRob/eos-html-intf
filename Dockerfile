@@ -1,6 +1,8 @@
 FROM i386/centos:7
 
 RUN yum update -y && yum install -y epel-release rpm-build rpmdevtools sudo
+
+RUN yum install -y gcc && glibc-devel
 # RUN yum groupinstall -y "Development tools" "Server Platform Development" "Additional Development" "Compatibility libraries"
 
 RUN useradd builder -u 1000 -m -G users,wheel && \
