@@ -24,4 +24,4 @@ ENV name='EosIntfGui'
 
 WORKDIR /home/builder/rpmbuild/SPECS
 
-# CMD rpmbuild -ba ${name}.spec
+CMD rpmbuild -ba ${name}.spec
