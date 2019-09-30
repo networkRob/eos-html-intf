@@ -6,7 +6,7 @@ License: Arista Networks
 Group: EOS/Extension
 Source0: %{name}-%{version}-%{release}.tar
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}.tar
-BuildArch: i686
+BuildArch: noarch
 
 %description
 This EOS extenstion will create a HTML GUI for your switch to monitor 
