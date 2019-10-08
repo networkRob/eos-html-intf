@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.8
+__version__ = 0.9
 
 from jsonrpclib import Server
 import json, socket, time
@@ -221,7 +221,7 @@ class lSwitch:
     def getSwImg(self,mName):
         mn = mName.lower().split('-')
         swName = mn[:len(mn)-1]
-        return("-".join(swName)+".png")
+        return("-".join(swName))
 
 class WSHandler(tornado.websocket.WebSocketHandler):
 

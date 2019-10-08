@@ -2,6 +2,19 @@ var eosURL = window.location.href;
 eosURL = eosURL.replace("https:","wss:")
 eosURL = eosURL.replace("apps/EosIntfs/","eos")
 
+swFormatting = {
+    'dcs-7280se-86': {
+        'top': '25px',
+        'left': '17px',
+        'intfBreaks': [15,16,32,33,48]
+    },
+    'ccs-720xp-48zc2': {
+        'top': '25px',
+        'left': '30px',
+        'intfBreaks': [15,16,23,24,39,40,47,48,51,52]
+    }
+}
+
 var ws = new WebSocket(eosURL);
 ws.onopen = function()
 {
@@ -28,7 +41,7 @@ ws.onmessage = function (evt)
         document.getElementById('eosVersion').innerHTML = systemData['eosVersion'];
         document.getElementById('lastUpdate').innerHTML = received_msg['timestamp'];
         document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
-        document.getElementById('eosImage').innerHTML = "<img src='imgs/" + systemData['swImg'] + "'>";
+        document.getElementById('eosImage').innerHTML = "<img src='imgs/" + systemData['swImg'] + ".png'>";
         output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
         disIntfDetail('Ethernet1');
@@ -231,8 +244,9 @@ function disIntfDetail(eName) {
     document.getElementById('intfDetail').innerHTML = i_output;
 }
 
+// Section to display intfs
 function disIntfs(swIntfs) {
-    var t_output = "<div class='rTable' style='top:25px;left:17px;'><div class='rTableRow'>";
+    var t_output = "<div class='rTable' style='top:" + swFormatting[systemData['swImg']]['top'] + ";left:" + swFormatting[systemData['swImg']]['left'] + ";'><div class='rTableRow'>";
     var row_top = "", row_bottom="";
     var ethCount = 0;
     for (i = 0; i < swIntfs.length; i++) {
@@ -252,7 +266,8 @@ function disIntfs(swIntfs) {
                     intType = "r";
                 }
                 if (i % 2 == 0 && i < 47) {
-                    if (i == 16 || i == 32) {
+                    if (swFormatting[systemData['swImg']]['intfBreaks'].includes(i)) {
+                    // if (i == 16 || i == 32) {
                         row_top += "<div class='rIntfBreak'></div>";
                     }
                     row_top += "<div class='" + intType + "Intf" + int_status + "' onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + intfName + "<br />";
@@ -263,7 +278,8 @@ function disIntfs(swIntfs) {
                     row_top += "Int Type: " + intfData[intfName]['xcvrType'] + "</span></div>";
                 }
                 else {
-                    if (i == 17 || i == 33 || i == 48) {
+                    if (swFormatting[systemData['swImg']]['intfBreaks'].includes(i)) {
+                    // if (i == 17 || i == 33 || i == 48) {
                         row_bottom += "<div class='rIntfBreak'></div>";
                     }
                     row_bottom += "<div class='" + intType + "Intf" + int_status + "' onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + intfName + "<br />";
