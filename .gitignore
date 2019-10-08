@@ -1,5 +1,8 @@
 conf/
-rpmbuild/
 source/scripts/test
 */.DS_Store
 .DS_Store
+rpmbuild/*
+!rpmbuild/SPECS/
+rpm/
+extension/
