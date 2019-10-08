@@ -5,3 +5,4 @@ source/scripts/test
 rpmbuild/*
 !rpmbuild/SPECS/
 rpm/
+extension/
