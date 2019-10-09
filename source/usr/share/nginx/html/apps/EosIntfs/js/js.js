@@ -29,6 +29,7 @@ ws.onmessage = function (evt)
         document.getElementById('eosVersion').innerHTML = systemData['eosVersion'];
         document.getElementById('lastUpdate').innerHTML = received_msg['timestamp'];
         document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
+        document.getElementById('terminVersion').innerHTML = systemData['terminattr']['version'] + "-" + systemData['terminattr']['release'];
         document.getElementById('eosImage').innerHTML = "<img src='imgs/" + systemData['swImg'] + ".png'>";
         output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
@@ -36,6 +37,7 @@ ws.onmessage = function (evt)
     }
     else {
         document.getElementById('lastUpdate').innerHTML = received_msg['timestamp'];
+        document.getElementById('terminVersion').innerHTML = systemData['terminattr']['version'] + "-" + systemData['terminattr']['release'];
         document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
         output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
