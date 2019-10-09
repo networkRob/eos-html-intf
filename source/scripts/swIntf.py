@@ -108,7 +108,7 @@ class lSwitch:
         self.swInfo['interfaceData'] = self._intfListToDict()
         self.swInfo['vlans'] = self.evalVlans()
         self.swInfo['vlansData'] = self._vlanListToDict()
-        self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg'].replace('.png', '')]
+        self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg']]
     
     def evalSystem(self):
         tmpSw = {
