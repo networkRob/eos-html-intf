@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.9
+__version__ = 0.10
 
 from jsonrpclib import Server
 import json, socket, time
@@ -119,7 +119,8 @@ class lSwitch:
             'eosVersion': self.swData[2]['version'],
             'hwRev': self.swData[2]['hardwareRevision'],
             'swImg': self.getSwImg(self.swData[2]['modelName']),
-            'extensions': self.parseExtensions(self.swData[4]['extensions'])
+            'extensions': self.parseExtensions(self.swData[4]['extensions']),
+            'poe': 'yes' if 'CCS' in self.swData[2]['modelName'] and 'XP' in self.swData[2]['modelName'] else ''
         }
         return(tmpSw)
     
@@ -135,6 +136,11 @@ class lSwitch:
         tmpEthIntf = []
         tmpPcIntf = []
         tmpMaIntf = []
+        # Check if switch is PoE capable
+        if self.swInfo['system']['poe']:
+            poeIntfs = self.runC("show poe")[0]['poePorts']
+        else:
+            poeIntfs = ''
         for intf in self.swData[0]['interfaceStatuses']:
             if 'Ethernet' in intf:
                 if '/' not in intf:
@@ -167,7 +173,18 @@ class lSwitch:
                 'allowedVlans': '',
                 'activeVlans': '',
                 'channelGroup': '',
+                'poeState': '',
+                'poePower': '',
+                'poeClass': '',
+                'poePriority': '',
             }
+            # Assign some PoE stats for interfaces
+            if poeIntfs:
+                if intf in poeIntfs:
+                    tmpDict['poeState'] = poeIntfs[intf]['portState']
+                    tmpDict['poePower'] = round(poeIntfs[intf]['power'], 2)
+                    tmpDict['poeClass'] = poeIntfs[intf]['pdClass']
+                    tmpDict['poePriority'] = poeIntfs[intf]['portPriority']
             # Set the interface mode
             if 'interfaceMode' in tmp_intf_status['vlanInformation']:
                 tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceMode']

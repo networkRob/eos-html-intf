@@ -151,6 +151,19 @@ function getIntfType(eName) {
     }
 }
 
+function getPoeInfo(eName) {
+    var poeInfo = '';
+    // Check to see if port is PoE Capable
+    if (intfData[eName]['poeState']) {
+        poeInfo += "PoE State: " + intfData[eName]['poeState'];
+        poeInfo += "<br />PoE Class: " + intfData[eName]['poeClass'];
+        poeInfo += "<br />PoE Power: " + intfData[eName]['poePower'] + " watts";
+        poeInfo += "<br />PoE Priority: " + intfData[eName]['poePriority'];
+        poeInfo += "<br />";
+    }
+    return poeInfo;
+}
+
 function getBW(bits) {
     var sizes = ['Bits/s', 'Kb/s', 'Mb/s', 'Gb/s', 'Tb/s'];
     if (bits == 0) return '0 Bit/s';
@@ -249,7 +262,6 @@ function disIntfs(swIntfs) {
             var intNum = i + 1;
             if (int_status) {
                 if (swlayout['qsfp'].includes(intNum)) {
-                // if (i >= 48) {
                     intType = "rQ";
                     intStyle = "";
                 }
@@ -269,6 +281,9 @@ function disIntfs(swIntfs) {
                     row_top += "Status: " + intfData[intfName]["status"] + "<br />";
                     row_top += "Bandwidth (In|Out): " + getBW(intfData[intfName]["rBit"]) + " | " + getBW(intfData[intfName]["xBit"]) + "<br />";
                     row_top += "Mode: " + getIntfType(intfName) + "<br />";
+                    if (systemData['poe']) {
+                        row_top += getPoeInfo(intfName);
+                    }
                     row_top += "Int Type: " + intfData[intfName]['xcvrType'] + "</span></div>";
                 }
                 else {
@@ -283,6 +298,9 @@ function disIntfs(swIntfs) {
                     row_bottom += "Status: " + intfData[intfName]["status"] + "<br />";
                     row_bottom += "Bandwidth (In|Out): " + getBW(intfData[intfName]["rBit"]) + " | " + getBW(intfData[intfName]["xBit"]) + "<br />";
                     row_bottom += "Mode: " + getIntfType(intfName) + "<br />";
+                    if (systemData['poe']) {
+                        row_bottom += getPoeInfo(intfName);
+                    }
                     row_bottom += "Int Type: " + intfData[intfName]['xcvrType'] + "</span></div>";
                 }
             }
