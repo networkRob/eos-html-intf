@@ -2,19 +2,6 @@ var eosURL = window.location.href;
 eosURL = eosURL.replace("https:","wss:")
 eosURL = eosURL.replace("apps/EosIntfs/","eos")
 
-swFormatting = {
-    'dcs-7280se-86': {
-        'top': '25px',
-        'left': '17px',
-        'intfBreaks': [15,16,32,33,48]
-    },
-    'ccs-720xp-48zc2': {
-        'top': '25px',
-        'left': '30px',
-        'intfBreaks': [15,16,23,24,39,40,47,48,51,52]
-    }
-}
-
 var ws = new WebSocket(eosURL);
 ws.onopen = function()
 {
@@ -32,6 +19,7 @@ ws.onmessage = function (evt)
     intfData = received_msg['data']['interfaceData'];
     vlns = received_msg['data']['vlans'];
     vlnsData = received_msg['data']['vlansData'];
+    swlayout = received_msg['data']['layout'];
     
     // Check to see if this is the initial data dump
     if (received_msg['type'] == "hello") {
@@ -246,7 +234,7 @@ function disIntfDetail(eName) {
 
 // Section to display intfs
 function disIntfs(swIntfs) {
-    var t_output = "<div class='rTable' style='top:" + swFormatting[systemData['swImg']]['top'] + ";left:" + swFormatting[systemData['swImg']]['left'] + ";'><div class='rTableRow'>";
+    var t_output = "<div class='rTable' style='top:" + swlayout['top'] + ";left:" + swlayout['left'] + ";'><div class='rTableRow'>";
     var row_top = "", row_bottom="";
     var ethCount = 0;
     for (i = 0; i < swIntfs.length; i++) {
@@ -258,19 +246,25 @@ function disIntfs(swIntfs) {
         if (swIntfs[i]['intf'].indexOf("Ethernet") > -1) {
             var intfName = swIntfs[i]['intf'];
             var int_status = checkStatus(intfData[intfName]['status']);
+            var intNum = i + 1;
             if (int_status) {
-                if (i >= 48) {
+                if (swlayout['qsfp'].includes(intNum)) {
+                // if (i >= 48) {
                     intType = "rQ";
+                    intStyle = "";
                 }
                 else {
                     intType = "r";
+                    intStyle = "style='width:" + swlayout['width'] + ";height:" + swlayout['height'] + ";margin:" + swlayout['margin'] + ";'";
                 }
-                if (i % 2 == 0 && i < 47) {
-                    if (swFormatting[systemData['swImg']]['intfBreaks'].includes(i)) {
-                    // if (i == 16 || i == 32) {
-                        row_top += "<div class='rIntfBreak'></div>";
+                if (i % 2 == 0 && swlayout['drow'].includes(intNum)) {
+                    if (swlayout['intfBreaks'].includes(intNum)) {
+                        row_top += "<div class='rIntfBreak' style='width:" + swlayout['intfbreakWidth'] + ";'></div>";
                     }
-                    row_top += "<div class='" + intType + "Intf" + int_status + "' onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + intfName + "<br />";
+                    else if (swlayout['sfpBreaks'].includes(intNum)) {
+                        row_top += "<div class='rIntfBreak' style='width:" + swlayout['sfpbreakWidth'] + ";'></div>";
+                    }
+                    row_top += "<div class='" + intType + "Intf" + int_status + "'" + intStyle + " onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextTOP" + "'>" + intfName + "<br />";
                     row_top += "Desc: " + intfData[intfName]['description'] + "<br />";
                     row_top += "Status: " + intfData[intfName]["status"] + "<br />";
                     row_top += "Bandwidth (In|Out): " + getBW(intfData[intfName]["rBit"]) + " | " + getBW(intfData[intfName]["xBit"]) + "<br />";
@@ -278,11 +272,13 @@ function disIntfs(swIntfs) {
                     row_top += "Int Type: " + intfData[intfName]['xcvrType'] + "</span></div>";
                 }
                 else {
-                    if (swFormatting[systemData['swImg']]['intfBreaks'].includes(i)) {
-                    // if (i == 17 || i == 33 || i == 48) {
-                        row_bottom += "<div class='rIntfBreak'></div>";
+                    if (swlayout['intfBreaks'].includes(intNum)) {
+                        row_bottom += "<div class='rIntfBreak' style='width:" + swlayout['intfbreakWidth'] + ";'></div>";
                     }
-                    row_bottom += "<div class='" + intType + "Intf" + int_status + "' onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + intfName + "<br />";
+                    else if (swlayout['sfpBreaks'].includes(intNum)) {
+                        row_bottom += "<div class='rIntfBreak' style='width:" + swlayout['sfpbreakWidth'] + ";'></div>";
+                    }
+                    row_bottom += "<div class='" + intType + "Intf" + int_status + "'" + intStyle + " onclick='disIntfDetail(\"" + intfName + "\")'>" + intfName.replace(/ethernet/i,"") + "<span class='IntfPopTextBOTTOM" + "'>" + intfName + "<br />";
                     row_bottom += "Desc: " + intfData[intfName]['description'] + "<br />";
                     row_bottom += "Status: " + intfData[intfName]["status"] + "<br />";
                     row_bottom += "Bandwidth (In|Out): " + getBW(intfData[intfName]["rBit"]) + " | " + getBW(intfData[intfName]["xBit"]) + "<br />";

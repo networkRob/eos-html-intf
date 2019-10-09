@@ -56,6 +56,35 @@ HOST = ''
 PORT = 50019
 all_cons = []
 tdelay = 5
+
+SWFORMATTING = {
+    'dcs-7280se-68': {
+        'top': '25px',
+        'left': '17px',
+        'width': '35px',
+        'height': '23px',
+        'margin': '0 0 16 0',
+        'sfpbreakWidth': '7px',
+        'intfbreakWidth': '19px',
+        'drow': range(1,48),
+        'qsfp': [49, 50],
+        'intfBreaks': [],
+        'sfpBreaks': [17,18,33,34,49]
+    },
+    'ccs-720xp-48zc2': {
+        'top': '29px',
+        'left': '29px',
+        'width': '30px',
+        'height': '20px',
+        'margin': '0 4 12 0',
+        'sfpbreakWidth': '14px',
+        'intfbreakWidth': '19px',
+        'drow': range(1,54),
+        'qsfp': [53,54],
+        'intfBreaks': [17,18,25,26,41,42],
+        'sfpBreaks': [49,50,53,54]
+    }
+}
 class lSwitch:
     def __init__(self):
         self.swInfo = {}
@@ -79,6 +108,7 @@ class lSwitch:
         self.swInfo['interfaceData'] = self._intfListToDict()
         self.swInfo['vlans'] = self.evalVlans()
         self.swInfo['vlansData'] = self._vlanListToDict()
+        self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg'].replace('.png', '')]
     
     def evalSystem(self):
         tmpSw = {
@@ -229,13 +259,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         xRemoteIp = self.request.headers['X-Forwarded-For'].split(':')
         _to_syslog("New connection from: {}".format(xRemoteIp[len(xRemoteIp)-1]))
         lo_sw.getData()
-        #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
         self.write_message(json.dumps({
             'type': "hello",
             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'data': lo_sw.swInfo
         }))
-        # self.write_message(json.dumps([0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),lo_sw.swInfo]))
         self.schedule_update()
     
     def on_message(self,message):
@@ -260,7 +288,6 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def update_client(self):
         try:
             lo_sw.getData()
-            #self.write_message(json.dumps([lo_sw.data,lo_sw.all_intfs,datetime.now().strftime("%Y-%m-%d %H:%M:%S")]))
             self.write_message(json.dumps({
                 'type': 'update',
                 'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
