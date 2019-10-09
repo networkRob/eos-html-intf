@@ -6,3 +6,4 @@ rpmbuild/*
 !rpmbuild/SPECS/
 rpm/
 extension/
+source/pypi
