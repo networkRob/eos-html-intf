@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.10
+__version__ = 0.11
 
 from jsonrpclib import Server
 import json, socket, time
@@ -96,7 +96,7 @@ class lSwitch:
         self.swData = self.runC(
             "show interfaces status",
             "show hostname",
-            "show version",
+            "show version detail",
             "show interfaces",
             "show extensions",
             "show vlan",
@@ -118,6 +118,7 @@ class lSwitch:
             'systemMac': self.swData[2]['systemMacAddress'],
             'eosVersion': self.swData[2]['version'],
             'hwRev': self.swData[2]['hardwareRevision'],
+            'terminattr': self.swData[2]['details']['packages']['TerminAttr-core'],
             'swImg': self.getSwImg(self.swData[2]['modelName']),
             'extensions': self.parseExtensions(self.swData[4]['extensions']),
             'poe': 'yes' if 'CCS' in self.swData[2]['modelName'] and 'XP' in self.swData[2]['modelName'] else ''
