@@ -6,7 +6,7 @@ case "${option}"
 in
 v) VERSION=${OPTARG};;
 r) RELEASE=${OPTARG};;
-i) DIMAGE=${OPTART};;
+i) DIMAGE=${OPTARG};;
 esac
 done
 mkdir -p rpmbuild/SOURCES
