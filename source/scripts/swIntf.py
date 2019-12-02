@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.11
+__version__ = 0.12
 
 from jsonrpclib import Server
 import json, socket, time
@@ -185,7 +185,11 @@ class lSwitch:
                     tmpDict['poeState'] = poeIntfs[intf]['portState']
                     tmpDict['poePower'] = round(poeIntfs[intf]['power'], 2)
                     tmpDict['poeClass'] = poeIntfs[intf]['pdClass']
-                    tmpDict['poePriority'] = poeIntfs[intf]['portPriority']
+                    # In 4.21.6F portPriority attrib is not present
+                    try:
+                        tmpDict['poePriority'] = poeIntfs[intf]['portPriority']
+                    except KeyError:
+                        tmpDict['poePriority'] = 'null'
             # Set the interface mode
             if 'interfaceMode' in tmp_intf_status['vlanInformation']:
                 tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceMode']
