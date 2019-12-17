@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.12
+__version__ = 0.13
 
 from jsonrpclib import Server
 import json, socket, time
@@ -197,7 +197,11 @@ class lSwitch:
                 tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceForwardingModel']
             # Check if routed, get IP address
             if tmpDict['mode'] == 'routed':
-                tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress'][0]['primaryIp']['address'] + '/' + str(tmp_intf_data['interfaceAddress'][0]['primaryIp']['maskLen'])
+                # Adding in to catch missing IP address on routed ports
+                try:
+                    tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress'][0]['primaryIp']['address'] + '/' + str(tmp_intf_data['interfaceAddress'][0]['primaryIp']['maskLen'])
+                except IndexError:
+                    tmpDict['ipAddress'] = ''
             elif tmpDict['mode'] == 'bridged':
                 tmpDict['vlanId'] = tmp_intf_status['vlanInformation']['vlanId']
             elif tmpDict['mode'] == 'trunk':

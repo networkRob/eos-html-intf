@@ -1,6 +1,6 @@
 Summary: EOS HTML Interface Viewer
 Name: EosIntfGui
-Version: 0.12
+Version: 0.13
 Release: 1
 License: Arista Networks
 Group: EOS/Extension
