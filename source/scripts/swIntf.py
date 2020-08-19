@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.13
+__version__ = '0.13-cEOS'
 
 from jsonrpclib import Server
 import json, socket, time
@@ -83,6 +83,19 @@ SWFORMATTING = {
         'qsfp': [53,54],
         'intfBreaks': [17,18,25,26,41,42],
         'sfpBreaks': [49,50,53,54]
+    },
+    'ceoslab': {
+        'top': '0px',
+        'left': '17px',
+        'width': '35px',
+        'height': '23px',
+        'margin': '0 0 16 0',
+        'sfpbreakWidth': '7px',
+        'intfbreakWidth': '19px',
+        'drow': range(1,48),
+        'qsfp': [49, 50],
+        'intfBreaks': [],
+        'sfpBreaks': []
     }
 }
 class lSwitch:
@@ -108,7 +121,10 @@ class lSwitch:
         self.swInfo['interfaceData'] = self._intfListToDict()
         self.swInfo['vlans'] = self.evalVlans()
         self.swInfo['vlansData'] = self._vlanListToDict()
-        self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg']]
+        try:
+            self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg']]
+        except:
+            pass
     
     def evalSystem(self):
         tmpSw = {
@@ -276,8 +292,11 @@ class lSwitch:
 
     def getSwImg(self,mName):
         mn = mName.lower().split('-')
-        swName = mn[:len(mn)-1]
-        return("-".join(swName))
+        if len(mn) > 1:
+            swName = mn[:len(mn)-1]
+            return("-".join(swName))
+        else:
+            return(mn[0])
 
 class WSHandler(tornado.websocket.WebSocketHandler):
 
