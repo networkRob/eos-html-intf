@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = 0.12
+__version__ = '0.14'
 
 from jsonrpclib import Server
 import json, socket, time
@@ -50,12 +50,21 @@ import syslog
 from time import sleep
 from datetime import timedelta, datetime
 import json
+import secrets
+import os, ssl
+
+if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
+    getattr(ssl, '_create_unverified_context', None)): 
+    ssl._create_default_https_context = ssl._create_unverified_context
+
 
 DEBUG = True
 HOST = ''
 PORT = 50019
 all_cons = []
 tdelay = 5
+BASE_PATH = '/opt/EosIntfs/'
+USERS = {}
 
 SWFORMATTING = {
     'dcs-7280se-68': {
@@ -83,9 +92,41 @@ SWFORMATTING = {
         'qsfp': [53,54],
         'intfBreaks': [17,18,25,26,41,42],
         'sfpBreaks': [49,50,53,54]
+    },
+    'veos': {
+        'top': '25px',
+        'left': '35px',
+        'width': '35px',
+        'height': '23px',
+        'margin': '0 0 16 0',
+        'sfpbreakWidth': '7px',
+        'intfbreakWidth': '19px',
+        'drow': range(1,48),
+        'qsfp': [49, 50],
+        'intfBreaks': [],
+        'sfpBreaks': []
+    },
+    'ceoslab': {
+        'top': '25px',
+        'left': '35px',
+        'width': '35px',
+        'height': '23px',
+        'margin': '0 0 16 0',
+        'sfpbreakWidth': '7px',
+        'intfbreakWidth': '19px',
+        'drow': range(1,48),
+        'qsfp': [49, 50],
+        'intfBreaks': [],
+        'sfpBreaks': []
     }
 }
-class lSwitch:
+
+class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return(self.get_secure_cookie("user"))
+
+
+class lSwitch(BaseHandler):
     def __init__(self):
         self.swInfo = {}
         self.l_sw = Server("unix:/var/run/command-api.sock")
@@ -108,7 +149,10 @@ class lSwitch:
         self.swInfo['interfaceData'] = self._intfListToDict()
         self.swInfo['vlans'] = self.evalVlans()
         self.swInfo['vlansData'] = self._vlanListToDict()
-        self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg']]
+        try:
+            self.swInfo['layout'] = SWFORMATTING[self.swInfo['system']['swImg']]
+        except:
+            pass
     
     def evalSystem(self):
         tmpSw = {
@@ -197,7 +241,11 @@ class lSwitch:
                 tmpDict['mode'] = tmp_intf_status['vlanInformation']['interfaceForwardingModel']
             # Check if routed, get IP address
             if tmpDict['mode'] == 'routed':
-                tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress'][0]['primaryIp']['address'] + '/' + str(tmp_intf_data['interfaceAddress'][0]['primaryIp']['maskLen'])
+                # Adding in to catch missing IP address on routed ports
+                try:
+                    tmpDict['ipAddress'] = tmp_intf_data['interfaceAddress'][0]['primaryIp']['address'] + '/' + str(tmp_intf_data['interfaceAddress'][0]['primaryIp']['maskLen'])
+                except IndexError:
+                    tmpDict['ipAddress'] = ''
             elif tmpDict['mode'] == 'bridged':
                 tmpDict['vlanId'] = tmp_intf_status['vlanInformation']['vlanId']
             elif tmpDict['mode'] == 'trunk':
@@ -272,8 +320,11 @@ class lSwitch:
 
     def getSwImg(self,mName):
         mn = mName.lower().split('-')
-        swName = mn[:len(mn)-1]
-        return("-".join(swName))
+        if len(mn) > 1:
+            swName = mn[:len(mn)-1]
+            return("-".join(swName))
+        else:
+            return(mn[0])
 
 class WSHandler(tornado.websocket.WebSocketHandler):
 
@@ -328,16 +379,80 @@ class WSHandler(tornado.websocket.WebSocketHandler):
  
     def check_origin(self, origin):
         return(True)
-    
+
+
+class eosRequestHandler(BaseHandler):
+    def get(self):
+        if not self.current_user:
+            self.redirect('/EosIntfs/login')
+            return()
+        else:
+            self.render(
+                BASE_PATH + 'index.html',
+            )
+
+class LogoutHandler(BaseHandler):
+    def get(self):
+        self.clear_cookie("user")
+        self.redirect('/EosIntfs/login')
+        return()
+
+class LoginHandler(BaseHandler):
+    def get(self):
+        self.render(
+            BASE_PATH + 'login.html',
+            LOGIN_MESSAGE=""
+        )
+
+    def post(self):
+        global USERS
+        AUTH = False
+        try:
+            test_server = Server("https://{0}:{1}@127.0.0.1/command-api".format(self.get_argument("name"), self.get_argument("pwd")))
+            test_response = test_server.runCmds(1,['show hostname'])
+            AUTH = True
+        except jsonrpclib.jsonrpc.ProtocolError:
+            self.render(
+                    BASE_PATH + 'login.html',
+                    LOGIN_MESSAGE="Wrong username and/or password."
+                )
+        if AUTH:
+            self.set_secure_cookie("user", self.get_argument("name"))
+            USERS[self.get_argument("name")] = {
+                'user': self.get_argument("name"),
+                'pwd': self.get_argument("pwd")
+            }
+            self.redirect("/EosIntfs")
+
+def genCookieSecret():
+    """
+    Function to generate a cookie_secret
+    """
+    return(secrets.token_hex(16))
+
 def _to_syslog(sys_msg):
         syslog.syslog("%%GUI-6-LOG: {}".format(sys_msg))
         if DEBUG:
             print(sys_msg)
 
-application = tornado.web.Application([(r'/eos', WSHandler),])
 
 if __name__ == "__main__":
     syslog.openlog('EOS-INTF-GUI',0,syslog.LOG_LOCAL4)
+    settings = {
+        'cookie_secret': genCookieSecret(),
+        'login_url': "/login"
+    }
+
+    application = tornado.web.Application([
+        (r'/EosIntfs', eosRequestHandler),
+        (r'/EosIntfs/js/(.*)', tornado.web.StaticFileHandler, {'path': BASE_PATH +  "js/"}),
+        (r'/EosIntfs/style/(.*)', tornado.web.StaticFileHandler, {'path': BASE_PATH +  "style/"}),
+        (r'/EosIntfs/imgs/(.*)', tornado.web.StaticFileHandler, {'path': BASE_PATH +  "imgs/"}),
+        (r'/EosIntfs/login', LoginHandler),
+        (r'/EosIntfs/logout', LogoutHandler),
+        (r'/EosIntfs/eos', WSHandler),
+    ], **settings)
+
     lo_sw = lSwitch()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(50019)

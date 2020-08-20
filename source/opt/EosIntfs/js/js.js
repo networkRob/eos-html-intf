@@ -1,6 +1,6 @@
 var eosURL = window.location.href;
 eosURL = eosURL.replace("https:","wss:")
-eosURL = eosURL.replace("apps/EosIntfs/","eos")
+eosURL = eosURL.replace("/EosIntfs","/EosIntfs/eos")
 
 var ws = new WebSocket(eosURL);
 ws.onopen = function()
@@ -30,7 +30,7 @@ ws.onmessage = function (evt)
         document.getElementById('lastUpdate').innerHTML = received_msg['timestamp'];
         document.getElementById('eosExtensions').innerHTML = disExt(systemData['extensions']);
         document.getElementById('terminVersion').innerHTML = systemData['terminattr']['version'] + "-" + systemData['terminattr']['release'];
-        document.getElementById('eosImage').innerHTML = "<img src='imgs/" + systemData['swImg'] + ".png'>";
+        document.getElementById('eosImage').innerHTML = "<img src='EosIntfs/imgs/" + systemData['swImg'] + ".png'>";
         output += disIntfs(intfs);
         document.getElementById('EosOutput').innerHTML = output;
         disIntfDetail('Ethernet1');

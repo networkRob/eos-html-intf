@@ -1,12 +1,12 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
    <link href="/bootstrap-combined.min.css" rel="stylesheet">
    <link rel="stylesheet" type="text/css" href="/style.css">
    <link rel="stylesheet" type="text/css" href="/documentationStyles.css">
+   <link rel="stylesheet" type="text/css" href="EosIntfs/style/EosIntfs.css">
    <script src="/jquery.min.js"></script>
    <script src="/bootstrap.min.js"></script>
-   <script src="/main.js"></script>
+   <script src="EosIntfs/js/js.js"></script>
    <title>Command API Applications</title>
 </head>
 <body>
@@ -24,18 +24,38 @@
               <li><a class="" href="/documentation.html">Command Documentation</a></li>
               <li class="divider"></li>
               <li class="active"><a class="" href="/apps/index.html">Apps</a></li>
+              <li><a class="" href="/EosIntfs/logout">Logout</a></li>
             </ul>
          </div>
       </div>
    </div>
    <div id="content" class="container">
      <div class="content-wrapper">
-       <h1>Applications built using Command API</h1>
-       <ul>
-         <li><a href="/explorer.html">Command API Explorer</a> - playground to explore Command API requests and responses</li>
-         <li><a href="TapAgg/">Tap Aggregation Manager</a> - user interface to manage this switch as a Tap Aggregation device</li>
-	 <li><a href="EosIntfs/">EOS Interface View</a> - visual view of EOS Interfaces</li>
-       </ul>
+        <h1>EOS Interface Viewer</h1>
+        <table class="sData">
+           <tr>
+              <td style="width:50%">
+                  <h3><div id="swHostname"></div></h3>
+                  <b>Last Update:</b> <span id="lastUpdate"></span><br />
+                  <b>Model:</b> <span id="eosModel"></span><br />
+                  <b>Serial Number:</b> <span id="serialNumber"></span><br />
+                  <b>EOS Version:</b> <span id="eosVersion"></span><br />
+                  <b>TerminAttr:</b> <span id="terminVersion"></span><br />
+                  <b>Extensions:</b><br />
+                  <span id="eosExtensions">No Extensions found.</span><br /><br />
+              </td>
+              <td style="width:50%">
+                 <div id="intfDetail"></div>
+              </td>
+           </tr>
+        </table>
+        
+        <div class='swImg'>
+           <span id="eosImage"></span>
+           <div id="EosOutput">EOS interface information is loading...</div>
+        </div>
+        <div id="testing"></div>
+        
      </div> <!-- end content-wrapper -->
    </div> <!-- end content -->
 </body>

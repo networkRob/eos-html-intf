@@ -3,10 +3,10 @@
    <link href="/bootstrap-combined.min.css" rel="stylesheet">
    <link rel="stylesheet" type="text/css" href="/style.css">
    <link rel="stylesheet" type="text/css" href="/documentationStyles.css">
-   <link rel="stylesheet" type="text/css" href="style/EosIntfs.css">
+   <!-- <link rel="stylesheet" type="text/css" href="style/EosIntfs.css"> -->
    <script src="/jquery.min.js"></script>
    <script src="/bootstrap.min.js"></script>
-   <script src="js/js.js"></script>
+   <!-- <script src="js/js.js"></script> -->
    <title>Command API Applications</title>
 </head>
 <body>
@@ -31,30 +31,13 @@
    <div id="content" class="container">
      <div class="content-wrapper">
         <h1>EOS Interface Viewer</h1>
-        <table class="sData">
-           <tr>
-              <td style="width:50%">
-                  <h3><div id="swHostname"></div></h3>
-                  <b>Last Update:</b> <span id="lastUpdate"></span><br />
-                  <b>Model:</b> <span id="eosModel"></span><br />
-                  <b>Serial Number:</b> <span id="serialNumber"></span><br />
-                  <b>EOS Version:</b> <span id="eosVersion"></span><br />
-                  <b>TerminAttr:</b> <span id="terminVersion"></span><br />
-                  <b>Extensions:</b><br />
-                  <span id="eosExtensions">No Extensions found.</span><br /><br />
-              </td>
-              <td style="width:50%">
-                 <div id="intfDetail"></div>
-              </td>
-           </tr>
-        </table>
-        
-        <div class='swImg'>
-           <span id="eosImage"></span>
-           <div id="EosOutput">EOS interface information is loading...</div>
-        </div>
-        <div id="testing"></div>
-        
+         Please login to access your switch GUI.
+         <form action="/EosIntfs/login" method="post">
+         Username: <input type="text" name="name"><br />
+         Password: <input type="password" name="pwd"><br />
+         <input type="submit" value="Sign In">
+         </form>
+         {{LOGIN_MESSAGE}}
      </div> <!-- end content-wrapper -->
    </div> <!-- end content -->
 </body>

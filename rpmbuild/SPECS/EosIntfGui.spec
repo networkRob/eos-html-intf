@@ -1,7 +1,7 @@
 Summary: EOS HTML Interface Viewer
 Name: EosIntfGui
-Version: 0.12
-Release: 1
+Version: 0.14
+Release: 20
 License: Arista Networks
 Group: EOS/Extension
 Source0: %{name}-%{version}-%{release}.tar
@@ -19,18 +19,18 @@ interfaces and make minor configuration changes to the ports.
 
 %install
 mkdir -p $RPM_BUILD_ROOT/etc/nginx/external_conf
-mkdir -p $RPM_BUILD_ROOT/usr/share/nginx/html/apps
 mkdir -p $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/usr/lib/python2.7/site-packages
+mkdir -p $RPM_BUILD_ROOT/opt/EosIntfs
 cp etc/nginx/external_conf/EosIntfs.conf $RPM_BUILD_ROOT/etc/nginx/external_conf/
 cp scripts/swIntf.py $RPM_BUILD_ROOT/usr/bin/swIntf
-cp -r usr/share/nginx/html/apps/EosIntfs $RPM_BUILD_ROOT/usr/share/nginx/html/apps/
 cp -r usr/lib/python2.7/site-packages/* $RPM_BUILD_ROOT/usr/lib/python2.7/site-packages/
+cp -r opt/EosIntfs/* $RPM_BUILD_ROOT/opt/EosIntfs/
 
 %files
 %defattr(-,root,root,-)
 /usr/bin/swIntf
 /usr/lib/python2.7/site-packages
-/usr/share/nginx/html/apps/EosIntfs
 /etc/nginx/external_conf/EosIntfs.conf
+/opt/EosIntfs
 %attr(0755,root,root) /usr/bin/swIntf
