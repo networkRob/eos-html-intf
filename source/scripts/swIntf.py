@@ -93,9 +93,22 @@ SWFORMATTING = {
         'intfBreaks': [17,18,25,26,41,42],
         'sfpBreaks': [49,50,53,54]
     },
+    'veos': {
+        'top': '25px',
+        'left': '35px',
+        'width': '35px',
+        'height': '23px',
+        'margin': '0 0 16 0',
+        'sfpbreakWidth': '7px',
+        'intfbreakWidth': '19px',
+        'drow': range(1,48),
+        'qsfp': [49, 50],
+        'intfBreaks': [],
+        'sfpBreaks': []
+    },
     'ceoslab': {
-        'top': '0px',
-        'left': '17px',
+        'top': '25px',
+        'left': '35px',
         'width': '35px',
         'height': '23px',
         'margin': '0 0 16 0',
@@ -378,6 +391,12 @@ class eosRequestHandler(BaseHandler):
                 BASE_PATH + 'index.html',
             )
 
+class LogoutHandler(BaseHandler):
+    def get(self):
+        self.clear_cookie("user")
+        self.redirect('/EosIntfs/login')
+        return()
+
 class LoginHandler(BaseHandler):
     def get(self):
         self.render(
@@ -430,6 +449,7 @@ if __name__ == "__main__":
         (r'/EosIntfs/style/(.*)', tornado.web.StaticFileHandler, {'path': BASE_PATH +  "style/"}),
         (r'/EosIntfs/imgs/(.*)', tornado.web.StaticFileHandler, {'path': BASE_PATH +  "imgs/"}),
         (r'/EosIntfs/login', LoginHandler),
+        (r'/EosIntfs/logout', LogoutHandler),
         (r'/EosIntfs/eos', WSHandler),
     ], **settings)
 

@@ -16,4 +16,15 @@ cd /workspaces/eos-html-intf/rpmbuild/SPECS
 
 rpmbuild -ba ${name}.spec
 
-scp /workspaces/eos-html-intf/rpmbuild/RPM/noarch/EosIntfGui-${VERSION}-${RELEASE}.noarch.rpm rmartin@192.168.23.5:/mnt/flash/
+cd /workspaces/eos-html-intf
+
+rm manifest.txt
+
+echo "format: 1" >> manifest.txt
+echo "primaryRPM: EosIntfGui-${VERSION}-${RELEASE}.noarch.rpm" >> manifest.txt
+echo -n "EosIntfGui-${VERSION}-${RELEASE}.noarch.rpm: " >> manifest.txt
+echo $(sha1sum rpmbuild/RPM/noarch/EosIntfGui-${VERSION}-${RELEASE}.noarch.rpm | awk '{print $1}') >> manifest.txt
+
+scp /workspaces/eos-html-intf/rpmbuild/RPM/noarch/EosIntfGui-${VERSION}-${RELEASE}.noarch.rpm rmartin@192.168.23.5:/mnt/flash/ext-eos/
+scp manifest.txt rmartin@192.168.23.5:/mnt/flash/ext-eos/
+
