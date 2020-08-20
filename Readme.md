@@ -6,7 +6,7 @@ This repo contains base files to be able to create a container that will be used
 
 ## Requirements
 
-At the moment this extension will work for DCS-7280SE-68 and CCS-720XP-48ZC2 switches.  All other dependencies are packeged in a .swix file.
+At the moment this extension will work for DCS-7280SE-68 and CCS-720XP-48ZC2 switches as well as vEOS-lab and cEOS-lab.  All other dependencies are packeged in a .swix file.
 
 ## Setup
 
