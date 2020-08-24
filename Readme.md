@@ -15,6 +15,7 @@ At the moment this extension will work for DCS-7280SE-68 and CCS-720XP-48ZC2 swi
 3. Enable eAPI connections over the local unix socket.
 4. For testing go into `bash` and start the script manually.
 5. To make the script persistent on reloads, create an `event-handler`
+6. Access the UI by navigating your browser to: `https://<switch_ip>/EosIntfs`
 
 #### Example (Non-Default MGMT VRF)
 
