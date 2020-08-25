@@ -38,7 +38,7 @@ A Python socket server to act as a backend service for switch information.
 
 """
 __author__ = 'rmartin'
-__version__ = '0.14'
+__version__ = '0.15'
 
 from jsonrpclib import Server
 import json, socket, time
@@ -51,6 +51,7 @@ from time import sleep
 from datetime import timedelta, datetime
 import json
 import secrets
+import xmlrpclib
 import os, ssl
 
 if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
@@ -411,7 +412,7 @@ class LoginHandler(BaseHandler):
             test_server = Server("https://{0}:{1}@127.0.0.1/command-api".format(self.get_argument("name"), self.get_argument("pwd")))
             test_response = test_server.runCmds(1,['show hostname'])
             AUTH = True
-        except jsonrpclib.jsonrpc.ProtocolError:
+        except xmlrpclib.ProtocolError:
             self.render(
                     BASE_PATH + 'login.html',
                     LOGIN_MESSAGE="Wrong username and/or password."
